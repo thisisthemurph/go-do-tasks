@@ -19,7 +19,8 @@ func main() {
 	config := config.LoadConfig();
 	repository.CreateAndPopulateDatabase()
 
-	storyService := services.NewStoryService()
+	dao := repository.NewDAO()
+	storyService := services.NewStoryService(dao)
 	handlers := handler.MakeHandlers(
 		&storyService,
 	)

@@ -7,27 +7,29 @@ import (
 
 type StoryService interface {
 	GetStories()				([]*entities.Story, error)
-	GetStoryById(userId uint)	(*entities.Story, error)
+	GetStoryById(userId string)	(*entities.Story, error)
 }
 
-type storyService struct{}
+type storyService struct{
+	dao repository.DAO
+	query repository.StoryQuery
+}
 
-func NewStoryService() StoryService {
-	return &storyService{}
+func NewStoryService(dao repository.DAO) StoryService {
+	return &storyService{
+		dao: dao, 
+		query: dao.NewStoryQuery(),
+	}
 }
 
 func (s *storyService) GetStories() ([]*entities.Story, error) {
-	dao := repository.NewDAO()
-	query := dao.NewStoryQuery()
-	stories, err := query.GetAllStories()
+	stories, err := s.query.GetAllStories()
 
 	return stories, err
 }
 
-func (s *storyService) GetStoryById(userId uint) (*entities.Story, error) {
-	dao := repository.NewDAO()
-	query := dao.NewStoryQuery()
-	story, err := query.GetStoryById(userId)
+func (s *storyService) GetStoryById(userId string) (*entities.Story, error) {
+	story, err := s.query.GetStoryById(userId)
 
 	return story, err
 }

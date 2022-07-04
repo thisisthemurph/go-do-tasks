@@ -1,14 +1,16 @@
 package entities
 
-import "github.com/jinzhu/gorm"
-
 type Task struct {
-	gorm.Model
-	
+	Base
+	StoryId string
+	Story   Story
+
 	Name        string
 	Description string
 	Type        int
 	Status      int
 
-	StoryID int
+	CreatorId string
+	Creator   Person `gorm:"foreignKey:CreatorId"`
+	Tags      []Tag  `gorm:"many2many:task_tags;"`
 }

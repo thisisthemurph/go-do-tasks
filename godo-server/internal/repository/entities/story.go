@@ -2,16 +2,19 @@ package entities
 
 import (
 	"fmt"
-
-	"github.com/jinzhu/gorm"
 )
 
 type Story struct {
-	gorm.Model
+	Base
+	ProjectId	string
+	Project		Project
 
-	// ID		uint
-	Name	string
-	Tasks 	[]Task
+	Name		string
+	Description	string
+
+	CreatorId	string
+	Creator		Person `gorm:"foreignKey:CreatorId"`
+	Tasks 		[]Task
 }
 
 func (s Story) ToString() string {

@@ -6,7 +6,6 @@ import (
 	"godo/internal/api/httputils"
 	"godo/internal/services"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -29,7 +28,8 @@ func (h *Handler) StoryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getStory(storyService services.StoryService, r *http.Request) (string, int) {
-	storyId, paramIdExists := getStoryId(r)
+	params := mux.Vars(r)
+	storyId, paramIdExists := params["id"]
 	if !paramIdExists {
 		return getAllStories(storyService, r)
 	}
@@ -54,14 +54,14 @@ func getAllStories(storyService services.StoryService, r *http.Request) (string,
 	return json, http.StatusOK
 }
 
-func getStoryId(r *http.Request) (uint, bool) {
-	params := mux.Vars(r)
-	paramId, paramIdExists := params["id"]
+// func getStoryId(r *http.Request) (uint, bool) {
+// 	params := mux.Vars(r)
+// 	paramId, paramIdExists := params["id"]
 
-	if !paramIdExists {
-		return 0, false
-	}
+// 	if !paramIdExists {
+// 		return 0, false
+// 	}
 
-	storyId, _ := strconv.ParseUint(paramId, 10, 32)
-	return uint(storyId), true
-}
+// 	storyId, _ := strconv.ParseUint(paramId, 10, 32)
+// 	return uint(storyId), true
+// }

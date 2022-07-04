@@ -5,10 +5,10 @@ import (
 )
 
 type StoryDto struct {
-	Id   uint
+	ID   string
 	Name string
 }
 
 func NewStoryDto(s entities.Story) *StoryDto {
-	return &StoryDto{Id: s.ID, Name: s.Name}
+	return &StoryDto{ID: s.ID, Name: s.Name}
 }

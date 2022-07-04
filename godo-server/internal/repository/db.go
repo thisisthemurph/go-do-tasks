@@ -41,21 +41,20 @@ func makeConnectionString(config config.Config) string {
 }
 
 func populateDatabase(db *gorm.DB) {
-	// defer db.Close();
-
 	// Drop the tables to refresh the data
+	db.DropTableIfExists(&entities.Person{})
+	db.DropTableIfExists(&entities.Project{})
 	db.DropTableIfExists(&entities.Story{})
 	db.DropTableIfExists(&entities.Task{})
+	db.DropTableIfExists(&entities.Tag{})
+	db.DropTableIfExists("task_tags")
 
 	// Create the tables and add the data
+	db.AutoMigrate(&entities.Person{})
+	db.AutoMigrate(&entities.Project{})
 	db.AutoMigrate(&entities.Story{})
 	db.AutoMigrate(&entities.Task{})
+	db.AutoMigrate(&entities.Tag{})
 
-	for index := range stories {
-		db.Create(&stories[index])
-	}
-
-	for index := range tasks {
-		db.Create(&tasks[index])
-	}
+	db.Create(&project)
 }
