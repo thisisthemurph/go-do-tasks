@@ -6,7 +6,7 @@ import (
 
 type Person struct {
 	Base
-	Name	string
+	Name	string `json:"name"`
 }
 
 func (p Person) ToString() string {

@@ -8,7 +8,7 @@ type Tag struct {
 	Base
 	ProjectId	string
 
-	Name	string
+	Name	string `json:"name"`
 }
 
 func (t Tag) ToString() string {

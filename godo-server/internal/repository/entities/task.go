@@ -5,8 +5,8 @@ type Task struct {
 	StoryId string
 	Story   Story
 
-	Name        string
-	Description string
+	Name        string `json:"name"`
+	Description string `json:"description"`
 	Type        int
 	Status      int
 

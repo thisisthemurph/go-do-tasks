@@ -9,8 +9,8 @@ type Story struct {
 	ProjectId	string
 	Project		Project
 
-	Name		string
-	Description	string
+	Name		string `json:"name"`
+	Description	string `json:"description"`
 
 	CreatorId	string
 	Creator		Person `gorm:"foreignKey:CreatorId"`
