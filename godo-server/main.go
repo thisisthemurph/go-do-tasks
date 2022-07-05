@@ -24,8 +24,6 @@ func main() {
 
 	router := mux.NewRouter()
 
-	// 3dbb43ff-7ca6-426e-88d5-b466cd0b203e
-
 	router.HandleFunc("/api/project", handlers.ProjectHandler).Methods(http.MethodGet)
 	router.HandleFunc("/api/project/{id:[a-f0-9-]+}", handlers.ProjectHandler).Methods(http.MethodGet)
 	router.HandleFunc("/api/story", handlers.StoryHandler).Methods(http.MethodGet)
