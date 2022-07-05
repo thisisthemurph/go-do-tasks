@@ -53,15 +53,3 @@ func getAllStories(storyService services.StoryService, r *http.Request) (string,
 	json, _ := dataToJson(stories)
 	return json, http.StatusOK
 }
-
-// func getStoryId(r *http.Request) (uint, bool) {
-// 	params := mux.Vars(r)
-// 	paramId, paramIdExists := params["id"]
-
-// 	if !paramIdExists {
-// 		return 0, false
-// 	}
-
-// 	storyId, _ := strconv.ParseUint(paramId, 10, 32)
-// 	return uint(storyId), true
-// }

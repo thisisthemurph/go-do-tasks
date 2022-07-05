@@ -20,14 +20,16 @@ func main() {
 	repository.CreateAndPopulateDatabase()
 
 	dao := repository.NewDAO()
-	storyService := services.NewStoryService(dao)
-	handlers := handler.MakeHandlers(
-		&storyService,
-	)
+	handlers := buildHandlers(dao)
 
 	router := mux.NewRouter()
+
+	// 3dbb43ff-7ca6-426e-88d5-b466cd0b203e
+
+	router.HandleFunc("/api/project", handlers.ProjectHandler).Methods(http.MethodGet)
+	router.HandleFunc("/api/project/{id:[a-f0-9-]+}", handlers.ProjectHandler).Methods(http.MethodGet)
 	router.HandleFunc("/api/story", handlers.StoryHandler).Methods(http.MethodGet)
-	router.HandleFunc("/api/story/{id:[0-9]+}", handlers.StoryHandler).Methods(http.MethodGet)
+	router.HandleFunc("/api/story/{id:[a-f0-9-]+}", handlers.StoryHandler).Methods(http.MethodGet)
 
 	srv := &http.Server{
 		Addr: 			"0.0.0.0:" + config.ApiPort,
@@ -39,4 +41,14 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func buildHandlers(dao repository.DAO) handler.IHandler {
+	projectService := services.NewProjectService(dao)
+	storyService := services.NewStoryService(dao)
+
+	return handler.MakeHandlers(
+		&projectService,
+		&storyService,
+	)
 }

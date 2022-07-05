@@ -6,6 +6,7 @@ import (
 
 type DAO interface {
 	NewStoryQuery() StoryQuery
+	NewProjectQuery() ProjectQuery
 }
 
 type dao struct{}
@@ -19,4 +20,8 @@ func NewDAO() DAO {
 
 func (d *dao) NewStoryQuery() StoryQuery {
 	return &storyQuery{}
+}
+
+func (d *dao) NewProjectQuery() ProjectQuery {
+	return &projectQuery{}
 }

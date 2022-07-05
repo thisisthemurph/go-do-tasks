@@ -7,15 +7,21 @@ import (
 )
 
 type IHandler interface {
+	ProjectHandler(http.ResponseWriter, *http.Request)
 	StoryHandler(http.ResponseWriter, *http.Request)
 }
 
 type Handler struct {
+	projectService services.ProjectService
 	storyService services.StoryService
 }
 
-func MakeHandlers(storyService *services.StoryService) IHandler {
+func MakeHandlers(
+	projectService *services.ProjectService,
+	storyService *services.StoryService) IHandler {
+
 	return &Handler{
+		projectService: *projectService,
 		storyService: *storyService,
 	}
 }
