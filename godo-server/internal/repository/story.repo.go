@@ -9,18 +9,20 @@ type StoryQuery interface {
 
 type storyQuery struct{}
 
+func (d *dao) NewStoryQuery() StoryQuery {
+	return &storyQuery{}
+}
+
 func (s *storyQuery) GetAllStories() ([]*entities.Story, error) {
-	db := GetDatabase()
 	stories := []*entities.Story{}
-	result := db.Find(&stories)
+	result := Database.Find(&stories)
 
 	return stories, result.Error
 }
 
 func (s *storyQuery) GetStoryById(storyId string) (*entities.Story, error) {
-	db := GetDatabase()
 	story := entities.Story{}
-	result := db.First(&story, 1)
+	result := Database.First(&story, 1)
 
 	return &story, result.Error
 }

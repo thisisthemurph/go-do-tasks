@@ -11,18 +11,20 @@ type ProjectQuery interface {
 
 type projectQuery struct{}
 
+func (d *dao) NewProjectQuery() ProjectQuery {
+	return &projectQuery{}
+}
+
 func (s *projectQuery) GetAllProjects() ([]*entities.Project, error) {
-	db := GetDatabase()
 	projects := []*entities.Project{}
-	err := db.Find(&projects).Error
+	err := Database.Find(&projects).Error
 
 	return projects, err
 }
 
 func (s *projectQuery) GetProjectById(projectId string) (*entities.Project, error) {
-	db := GetDatabase()
 	project := entities.Project{}
-	err := db.First(&project, "id = ?", projectId).Error
+	err := Database.First(&project, "id = ?", projectId).Error
 
 	return &project, err
 }

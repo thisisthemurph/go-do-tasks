@@ -11,13 +11,11 @@ type ProjectService interface {
 }
 
 type projectService struct{
-	dao repository.DAO
 	query repository.ProjectQuery
 }
 
 func NewProjectService(dao repository.DAO) ProjectService {
 	return &projectService{
-		dao: dao, 
 		query: dao.NewProjectQuery(),
 	}
 }
