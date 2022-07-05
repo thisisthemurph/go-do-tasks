@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"godo/internal/api/httputils"
+	"godo/internal/repository/entities"
 	"godo/internal/services"
 	"log"
 	"net/http"
@@ -14,9 +15,17 @@ func (h *Handler) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 	var result string
 	var status int = http.StatusOK
 
+	log.Printf("Received method: %v", r.Method)
+
 	switch r.Method {
 	case http.MethodGet:
 		result, status = getProject(h.projectService, r)
+		break
+	case http.MethodPost:
+		result, status = createProject(h.projectService, r)
+		break
+	case http.MethodPut:
+		result, status = updateProject(h.projectService, r)
 		break
 	default:
 		result = fmt.Sprintf("Bad method %s", r.Method)
@@ -28,10 +37,7 @@ func (h *Handler) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProject(projectService services.ProjectService, r *http.Request) (string, int) {
-	params := mux.Vars(r)
-	projectId, paramIdExists := params["id"]
-	log.Println(params)
-	log.Printf("ID: %v\n", projectId)
+	projectId, paramIdExists := getProjectIdFromRequest(r)
 	if !paramIdExists {
 		return getAllProjects(projectService, r)
 	}
@@ -57,4 +63,51 @@ func getAllProjects(projectService services.ProjectService, r *http.Request) (st
 
 	json, _ := dataToJson(projects)
 	return json, http.StatusOK
+}
+
+func createProject(projectService services.ProjectService, r *http.Request) (string, int) {
+	project := &entities.Project{}
+
+	requestErr := project.FromJSON(r.Body)
+
+	log.Printf("Project: %#v", project)
+
+	createErr := projectService.CreateProject(project)
+	if createErr != nil {
+		return httputils.MakeHttpError(http.StatusBadRequest, requestErr.Error())
+	}
+
+	return "", http.StatusOK
+}
+
+func updateProject(projectService services.ProjectService, r *http.Request) (string, int) {
+	newProjectData := &entities.Project{}
+	projectId, _ := getProjectIdFromRequest(r)
+
+	_, existsErr := projectService.GetProjectById(projectId)
+	if existsErr != nil {
+		return httputils.MakeHttpError(
+			http.StatusNotFound,
+			"The specified product could not be found")
+	}
+
+	// Gat the project from the body
+	requestErr := newProjectData.FromJSON(r.Body)
+	if requestErr != nil {
+		return httputils.MakeHttpError(http.StatusBadRequest, requestErr.Error())
+	}
+
+	// Update the project
+	err := projectService.UpdateProject(projectId, newProjectData)
+	if err != nil {
+		return httputils.MakeHttpError(500, err.Error())
+	}
+
+	return "", http.StatusOK
+}
+
+func getProjectIdFromRequest(r *http.Request) (string, bool) {
+	params := mux.Vars(r)
+	projectId, paramIdExists := params["id"]
+	return projectId, paramIdExists
 }

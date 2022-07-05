@@ -1,6 +1,8 @@
 package entities
 
 import (
+	"encoding/json"
+	"io"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -8,13 +10,20 @@ import (
 )
 
 type Base struct {
-	ID        string
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `sql:"index" json:"deleted_at"`
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"-"`
+	UpdatedAt time.Time  `json:"-"`
+	DeletedAt *time.Time `sql:"index" json:"-"`
 }
 
+type Bases []*Base
+
 func (base *Base) BeforeCreate(scope *gorm.Scope) error {
- id := uuid.NewV4()
- return scope.SetColumn("ID", id.String())
+	id := uuid.NewV4()
+	return scope.SetColumn("ID", id.String())
+}
+
+func (b *Bases) ToJSON(w io.Writer) error {
+	e := json.NewEncoder(w)
+	return e.Encode(b)
 }

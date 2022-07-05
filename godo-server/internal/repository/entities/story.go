@@ -6,15 +6,15 @@ import (
 
 type Story struct {
 	Base
-	ProjectId	string
-	Project		Project
+	ProjectId string
+	Project   Project `json:"-"`
 
-	Name		string `json:"name"`
-	Description	string `json:"description"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 
-	CreatorId	string
-	Creator		Person `gorm:"foreignKey:CreatorId"`
-	Tasks 		[]Task
+	CreatorId string `json:"-"`
+	Creator   Person `gorm:"foreignKey:CreatorId"`
+	Tasks     []Task
 }
 
 func (s Story) ToString() string {

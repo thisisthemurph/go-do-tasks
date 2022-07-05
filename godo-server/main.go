@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	config := config.LoadConfig();
+	config := config.LoadConfig()
 	repository.CreateAndPopulateDatabase()
 
 	dao := repository.NewDAO()
@@ -24,16 +24,16 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/api/project", handlers.ProjectHandler).Methods(http.MethodGet)
-	router.HandleFunc("/api/project/{id:[a-f0-9-]+}", handlers.ProjectHandler).Methods(http.MethodGet)
+	router.HandleFunc("/api/project", handlers.ProjectHandler).Methods(http.MethodGet, http.MethodPost)
+	router.HandleFunc("/api/project/{id:[a-f0-9-]+}", handlers.ProjectHandler)
 	router.HandleFunc("/api/story", handlers.StoryHandler).Methods(http.MethodGet)
-	router.HandleFunc("/api/story/{id:[a-f0-9-]+}", handlers.StoryHandler).Methods(http.MethodGet)
+	router.HandleFunc("/api/story/{id:[a-f0-9-]+}", handlers.StoryHandler)
 
 	srv := &http.Server{
-		Addr: 			"0.0.0.0:" + config.ApiPort,
-		WriteTimeout: 	time.Second * 15,
-		IdleTimeout:	time.Second * 15,
-		Handler: 		cors.Default().Handler(router),	
+		Addr:         "0.0.0.0:" + config.ApiPort,
+		WriteTimeout: time.Second * 15,
+		IdleTimeout:  time.Second * 15,
+		Handler:      cors.Default().Handler(router),
 	}
 
 	if err := srv.ListenAndServe(); err != nil {

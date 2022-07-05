@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"godo/internal/api/dto"
 	"godo/internal/api/httputils"
 	"godo/internal/services"
 	"net/http"
@@ -40,7 +39,7 @@ func getStory(storyService services.StoryService, r *http.Request) (string, int)
 		return httputils.MakeHttpError(http.StatusNotFound, message)
 	}
 
-	json, _ := dataToJson(dto.NewStoryDto(*story))
+	json, _ := dataToJson(*story)
 	return json, http.StatusOK
 }
 
