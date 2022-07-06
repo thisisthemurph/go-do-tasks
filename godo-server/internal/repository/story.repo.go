@@ -1,6 +1,8 @@
 package repository
 
-import "godo/internal/repository/entities"
+import (
+	"godo/internal/repository/entities"
+)
 
 type StoryQuery interface {
 	GetStoryById(storyId string) (*entities.Story, error)

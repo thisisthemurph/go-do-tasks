@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 	"godo/internal/api/httputils"
-	"godo/internal/services"
+	"godo/internal/api/services"
 	"net/http"
 
 	"github.com/gorilla/mux"

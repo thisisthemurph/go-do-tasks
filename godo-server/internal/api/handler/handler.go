@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"godo/internal/services"
+	"godo/internal/api/services"
 	"net/http"
 )
 
@@ -13,7 +13,7 @@ type IHandler interface {
 
 type Handler struct {
 	projectService services.ProjectService
-	storyService services.StoryService
+	storyService   services.StoryService
 }
 
 func MakeHandlers(
@@ -22,14 +22,14 @@ func MakeHandlers(
 
 	return &Handler{
 		projectService: *projectService,
-		storyService: *storyService,
+		storyService:   *storyService,
 	}
 }
 
 // Converts a struct into a JSON object
 func dataToJson(d interface{}) (string, error) {
 	data, err := json.Marshal(d)
-	if (err != nil) {
+	if err != nil {
 		return "", err
 	}
 

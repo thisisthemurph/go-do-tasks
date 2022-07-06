@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"godo/internal/api/handler"
+	"godo/internal/api/services"
 	"godo/internal/config"
 	"godo/internal/repository"
-	"godo/internal/services"
 
 	"github.com/gorilla/mux"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
