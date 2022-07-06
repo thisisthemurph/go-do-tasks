@@ -2,6 +2,7 @@ package repository
 
 import (
 	"godo/internal/repository/entities"
+	"log"
 	"time"
 )
 
@@ -10,6 +11,8 @@ type ProjectQuery interface {
 	GetAllProjects() ([]*entities.Project, error)
 	CreateProject(newProject *entities.Project) error
 	UpdateProject(projectId string, newProject *entities.Project) error
+	DeleteProject(projectId string) error
+	Exists(projectId string) bool
 }
 
 type projectQuery struct{}
@@ -51,4 +54,23 @@ func (p *projectQuery) UpdateProject(projectId string, newProject *entities.Proj
 	Database.Save(&project)
 
 	return nil
+}
+
+func (p *projectQuery) DeleteProject(projectId string) error {
+	deletedProject := &entities.Project{}
+	return Database.
+		Where("id = ?", projectId).
+		Delete(deletedProject).
+		Error
+}
+
+func (p *projectQuery) Exists(projectId string) bool {
+	log.Printf("Exists(%v)\n", projectId)
+
+	project := &entities.Project{}
+	r := Database.First(project, "id = ?", projectId)
+
+	log.Println(r.RowsAffected)
+
+	return r.RowsAffected == 1
 }

@@ -27,6 +27,9 @@ func (h *Handler) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		result, status = updateProject(h.projectService, r)
 		break
+	case http.MethodDelete:
+		result, status = deleteProject(h.projectService, r)
+		break
 	default:
 		result = fmt.Sprintf("Bad method %s", r.Method)
 		status = http.StatusBadGateway
@@ -99,6 +102,17 @@ func updateProject(projectService services.ProjectService, r *http.Request) (str
 
 	// Update the project
 	err := projectService.UpdateProject(projectId, newProjectData)
+	if err != nil {
+		return httputils.MakeHttpError(500, err.Error())
+	}
+
+	return "", http.StatusOK
+}
+
+func deleteProject(projectService services.ProjectService, r *http.Request) (string, int) {
+	projectId, _ := getProjectIdFromRequest(r)
+	err := projectService.DeleteProject(projectId)
+
 	if err != nil {
 		return httputils.MakeHttpError(500, err.Error())
 	}

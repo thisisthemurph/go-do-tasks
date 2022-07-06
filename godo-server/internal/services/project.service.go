@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
 )
@@ -10,6 +11,7 @@ type ProjectService interface {
 	GetProjectById(userId string) (*entities.Project, error)
 	CreateProject(newProject *entities.Project) error
 	UpdateProject(projectId string, newProjectData *entities.Project) error
+	DeleteProject(projectId string) error
 }
 
 type projectService struct {
@@ -40,4 +42,12 @@ func (p *projectService) CreateProject(newProject *entities.Project) error {
 func (p *projectService) UpdateProject(projectId string, newProjectData *entities.Project) error {
 	err := p.query.UpdateProject(projectId, newProjectData)
 	return err
+}
+
+func (p *projectService) DeleteProject(projectId string) error {
+	if !p.query.Exists(projectId) {
+		return errors.New("The required project could not be found")
+	}
+
+	return p.query.DeleteProject(projectId)
 }
