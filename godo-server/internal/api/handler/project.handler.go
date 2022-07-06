@@ -67,14 +67,12 @@ func getAllProjects(projectService services.ProjectService, r *http.Request) (st
 
 func createProject(projectService services.ProjectService, r *http.Request) (string, int) {
 	project := &entities.Project{}
+	if bodyErr := project.FromJSON(r.Body); bodyErr != nil {
+		return httputils.MakeHttpError(http.StatusBadRequest, bodyErr.Error())
+	}
 
-	requestErr := project.FromJSON(r.Body)
-
-	log.Printf("Project: %#v", project)
-
-	createErr := projectService.CreateProject(project)
-	if createErr != nil {
-		return httputils.MakeHttpError(http.StatusBadRequest, requestErr.Error())
+	if createErr := projectService.CreateProject(project); createErr != nil {
+		return createErr.AsJson(), createErr.GetStatusCode()
 	}
 
 	return "", http.StatusOK

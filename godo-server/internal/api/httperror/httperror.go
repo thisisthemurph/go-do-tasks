@@ -15,16 +15,18 @@ type HttpError interface {
 }
 
 type httpError struct {
-	Err        error  `json:"errorMessage"`
-	StatusCode int    `json:"status"`
-	StatusText string `json:"-"`
+	Err          error  `json:"-"`
+	ErrorMessage string `json:"errorMessage"`
+	StatusCode   int    `json:"statusCode"`
+	StatusText   string `json:"-"`
 }
 
 func New(status int, message string) HttpError {
 	return &httpError{
-		Err:        errors.New(message),
-		StatusCode: status,
-		StatusText: http.StatusText(status),
+		Err:          errors.New(message),
+		ErrorMessage: message,
+		StatusCode:   status,
+		StatusText:   http.StatusText(status),
 	}
 }
 
