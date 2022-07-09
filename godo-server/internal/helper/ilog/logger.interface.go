@@ -28,9 +28,3 @@ type StdLogger interface {
 	Fatalln(args ...interface{})
 	Panicln(args ...interface{})
 }
-
-func ErrorlnIf(err error, log StdLogger) {
-	if err != nil {
-		log.Errorln(err)
-	}
-}
