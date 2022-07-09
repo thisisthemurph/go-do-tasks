@@ -16,10 +16,10 @@ type storyService struct {
 	query repository.StoryQuery
 }
 
-func NewStoryService(dao repository.DAO, log ilog.StdLogger) StoryService {
+func NewStoryService(storyQuery repository.StoryQuery, log ilog.StdLogger) StoryService {
 	return &storyService{
 		log:   log,
-		query: dao.NewStoryQuery(),
+		query: storyQuery,
 	}
 }
 

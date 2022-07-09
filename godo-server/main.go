@@ -44,13 +44,20 @@ func buildHandlers(dao repository.DAO, logger logrus.FieldLogger) handler.IHandl
 	// Make loggers with the specific required parameters
 	projectServiceLogger := makeLoggerWithTag("ProjectService")
 	storyServiceLogger := makeLoggerWithTag("ProjectService")
+	projectQueryLogger := makeLoggerWithTag("ProjectRepo")
+	storyQueryLogger := makeLoggerWithTag("StoryRepo")
+	handlerLogger := makeLoggerWithTag("Handler")
 
-	// Instantiate the services
-	projectService := services.NewProjectService(dao, projectServiceLogger)
-	storyService := services.NewStoryService(dao, storyServiceLogger)
+	// Initialize the repositories
+	projectQuery := dao.NewProjectQuery(projectQueryLogger)
+	storyQuery := dao.NewStoryQuery(storyQueryLogger)
+
+	// Initialize the services
+	projectService := services.NewProjectService(projectQuery, projectServiceLogger)
+	storyService := services.NewStoryService(storyQuery, storyServiceLogger)
 
 	return handler.MakeHandlers(
-		makeLoggerWithTag("Handler"),
+		handlerLogger,
 		&projectService,
 		&storyService,
 	)

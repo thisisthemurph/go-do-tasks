@@ -7,7 +7,7 @@ import (
 )
 
 type DAO interface {
-	NewStoryQuery() StoryQuery
+	NewStoryQuery(logger ilog.StdLogger) StoryQuery
 	NewProjectQuery(logger ilog.StdLogger) ProjectQuery
 }
 

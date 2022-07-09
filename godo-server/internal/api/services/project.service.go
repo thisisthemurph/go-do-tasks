@@ -21,14 +21,14 @@ type projectService struct {
 	query repository.ProjectQuery
 }
 
-func NewProjectService(dao repository.DAO, logger ilog.StdLogger) ProjectService {
+func NewProjectService(projectQuery repository.ProjectQuery, logger ilog.StdLogger) ProjectService {
 	return &projectService{
 		log:   logger,
-		query: dao.NewProjectQuery(logger),
+		query: projectQuery,
 	}
 }
 
-var ProjectNotFoundError = httperror.New(http.StatusNotFound, "The required project could not be found")
+var ProjectNotFoundHttpError = httperror.New(http.StatusNotFound, "The required project could not be found")
 
 func (p *projectService) GetProjects() ([]*entities.Project, httperror.HttpError) {
 	projects, err := p.query.GetAllProjects()
@@ -45,7 +45,7 @@ func (p *projectService) GetProjectById(projectId string) (*entities.Project, ht
 	project, err := p.query.GetProjectById(projectId)
 
 	if err != nil {
-		return nil, ProjectNotFoundError
+		return nil, ProjectNotFoundHttpError
 	}
 
 	return project, nil
@@ -63,7 +63,7 @@ func (p *projectService) CreateProject(newProject *entities.Project) httperror.H
 
 func (p *projectService) UpdateProject(projectId string, newProjectData *entities.Project) httperror.HttpError {
 	if projectExists := p.query.Exists(projectId); !projectExists {
-		return ProjectNotFoundError
+		return ProjectNotFoundHttpError
 	}
 
 	err := p.query.UpdateProject(projectId, newProjectData)
@@ -76,7 +76,7 @@ func (p *projectService) UpdateProject(projectId string, newProjectData *entitie
 
 func (p *projectService) DeleteProject(projectId string) httperror.HttpError {
 	if projectExists := p.query.Exists(projectId); !projectExists {
-		return ProjectNotFoundError
+		return ProjectNotFoundHttpError
 	}
 
 	err := p.query.DeleteProject(projectId)
