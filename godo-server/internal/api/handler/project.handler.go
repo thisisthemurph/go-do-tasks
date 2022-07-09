@@ -16,7 +16,7 @@ func (h *Handler) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 	var result string
 	var status int = http.StatusOK
 
-	log.Printf("Received method: %v", r.Method)
+	log.Printf("Project handler - method: %v", r.Method)
 
 	switch r.Method {
 	case http.MethodGet:
@@ -46,6 +46,8 @@ func getProject(projectService services.ProjectService, r *http.Request) (string
 		return getAllProjects(projectService, r)
 	}
 
+	log.Println("Fetching project with id:", projectId)
+
 	project, err := projectService.GetProjectById(projectId)
 	if err != nil {
 		return err.AsJson(), err.GetStatusCode()
@@ -56,6 +58,7 @@ func getProject(projectService services.ProjectService, r *http.Request) (string
 }
 
 func getAllProjects(projectService services.ProjectService, r *http.Request) (string, int) {
+	log.Println("Handler - fetching all projects")
 	projects, err := projectService.GetProjects()
 	if err != nil {
 		return err.AsJson(), err.GetStatusCode()
@@ -66,13 +69,12 @@ func getAllProjects(projectService services.ProjectService, r *http.Request) (st
 }
 
 func createProject(projectService services.ProjectService, r *http.Request) (string, int) {
-	project := &entities.Project{}
-	if bodyErr := project.FromJSON(r.Body); bodyErr != nil {
-		return httputils.MakeHttpError(http.StatusBadRequest, bodyErr.Error())
-	}
+	var project entities.Project
+	project.FromHttpRequest(r)
 
-	if createErr := projectService.CreateProject(project); createErr != nil {
-		return createErr.AsJson(), createErr.GetStatusCode()
+	err := projectService.CreateProject(&project)
+	if err != nil {
+		return err.AsJson(), err.GetStatusCode()
 	}
 
 	return "", http.StatusOK

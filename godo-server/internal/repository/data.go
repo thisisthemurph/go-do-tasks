@@ -6,8 +6,8 @@ var (
 	user1 = entities.Person{Name: "Ash"}
 	user2 = entities.Person{Name: "Misty"}
 
-	qaTag = entities.Tag{Name: "QA"}
-	onHoldTag = entities.Tag{Name: "On hold"}
+	qaTag      = entities.Tag{Name: "QA"}
+	onHoldTag  = entities.Tag{Name: "On hold"}
 	easyWinTag = entities.Tag{Name: "Easy win"}
 
 	allTags = []entities.Tag{qaTag, onHoldTag, easyWinTag}
@@ -18,14 +18,14 @@ var (
 			Description: "Design the structure of the database",
 			Type:        0,
 			Status:      0,
-			Creator: user2,
+			Creator:     user2,
 		},
 		{
 			Name:        "Database implementation",
 			Description: "Implement the actual database in code",
 			Type:        0,
 			Status:      0,
-			Creator: user2,
+			Creator:     user2,
 		},
 	}
 
@@ -35,7 +35,7 @@ var (
 			Description: "Design the user interface and UX considerations",
 			Type:        0,
 			Status:      0,
-			Creator: user1,
+			Creator:     user1,
 		},
 	}
 
@@ -45,10 +45,10 @@ var (
 	}
 
 	project = entities.Project{
-		Name: "TheMainSolution_Dev",
+		Name:        "TheMainSolution_Dev",
 		Description: "This is the description of this project/solution",
-		Stories: stories,
-		Tags: allTags,
-		Creator: user1,
+		Stories:     stories,
+		Tags:        allTags,
+		Creator:     user1,
 	}
 )

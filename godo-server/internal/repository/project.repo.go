@@ -36,7 +36,14 @@ func (p *projectQuery) GetProjectById(projectId string) (*entities.Project, erro
 }
 
 func (p *projectQuery) CreateProject(newProject *entities.Project) error {
+	log.Printf("Repo: creating Project: %#v", newProject)
+
 	err := Database.Create(&newProject).Error
+
+	if err != nil {
+		log.Println("Repo error: error creating Project:", err)
+	}
+
 	return err
 }
 
