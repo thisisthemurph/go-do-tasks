@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"godo/internal/api/services"
+	"godo/internal/helper/ilog"
 	"net/http"
 )
 
@@ -12,15 +13,18 @@ type IHandler interface {
 }
 
 type Handler struct {
+	log            ilog.StdLogger
 	projectService services.ProjectService
 	storyService   services.StoryService
 }
 
 func MakeHandlers(
+	logger ilog.StdLogger,
 	projectService *services.ProjectService,
 	storyService *services.StoryService) IHandler {
 
 	return &Handler{
+		log:            logger,
 		projectService: *projectService,
 		storyService:   *storyService,
 	}

@@ -1,8 +1,8 @@
 package repository
 
 import (
+	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
-	"log"
 	"time"
 )
 
@@ -15,69 +15,76 @@ type ProjectQuery interface {
 	Exists(projectId string) bool
 }
 
-type projectQuery struct{}
-
-func (d *dao) NewProjectQuery() ProjectQuery {
-	return &projectQuery{}
+type projectQuery struct {
+	log ilog.StdLogger
 }
 
-func (p *projectQuery) GetAllProjects() ([]*entities.Project, error) {
+func (d *dao) NewProjectQuery(logger ilog.StdLogger) ProjectQuery {
+	return &projectQuery{log: logger}
+}
+
+func (q *projectQuery) GetAllProjects() ([]*entities.Project, error) {
+	q.log.Info("Fetching all project")
+
 	projects := []*entities.Project{}
 	err := Database.Find(&projects).Error
+	ilog.ErrorlnIf(err, q.log)
 
 	return projects, err
 }
 
-func (p *projectQuery) GetProjectById(projectId string) (*entities.Project, error) {
+func (q *projectQuery) GetProjectById(projectId string) (*entities.Project, error) {
+	q.log.Infof("Fetching project with ID %v", projectId)
+
 	project := entities.Project{}
 	err := Database.First(&project, "id = ?", projectId).Error
+	ilog.ErrorlnIf(err, q.log)
 
 	return &project, err
 }
 
-func (p *projectQuery) CreateProject(newProject *entities.Project) error {
-	log.Printf("Repo: creating Project: %#v", newProject)
+func (q *projectQuery) CreateProject(newProject *entities.Project) error {
+	q.log.Infof("Creating Project with name %v", newProject.Name)
 
 	err := Database.Create(&newProject).Error
-
-	if err != nil {
-		log.Println("Repo error: error creating Project:", err)
-	}
+	ilog.ErrorlnIf(err, q.log)
 
 	return err
 }
 
-func (p *projectQuery) UpdateProject(projectId string, newProject *entities.Project) error {
-	project, _ := p.GetProjectById(projectId)
+func (q *projectQuery) UpdateProject(projectId string, newProject *entities.Project) error {
+	project, _ := q.GetProjectById(projectId)
 
 	err := Database.First(&project, "id = ?", projectId).Error
 	if err != nil {
+		q.log.Errorf("Unable to fetch project (%v) from database", projectId)
 		return err
 	}
 
 	project.Name = newProject.Name
 	project.Description = newProject.Description
 	project.UpdatedAt = time.Now()
-	Database.Save(&project)
+	result := Database.Save(&project)
 
-	return nil
+	ilog.ErrorlnIf(result.Error, q.log)
+	return result.Error
 }
 
-func (p *projectQuery) DeleteProject(projectId string) error {
+func (q *projectQuery) DeleteProject(projectId string) error {
+	q.log.Infof("Deleting project with ID %v", projectId)
+
 	deletedProject := &entities.Project{}
-	return Database.
-		Where("id = ?", projectId).
-		Delete(deletedProject).
-		Error
+	result := Database.Where("id = ?", projectId).Delete(deletedProject)
+	return result.Error
 }
 
-func (p *projectQuery) Exists(projectId string) bool {
-	log.Printf("Exists(%v)\n", projectId)
+func (q *projectQuery) Exists(projectId string) bool {
+	q.log.Info("Checking if project with ID %v exists", projectId)
 
 	project := &entities.Project{}
 	r := Database.First(project, "id = ?", projectId)
 
-	log.Println(r.RowsAffected)
+	q.log.Println(r.RowsAffected)
 
 	return r.RowsAffected == 1
 }

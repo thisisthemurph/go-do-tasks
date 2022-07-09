@@ -6,7 +6,6 @@ import (
 	"godo/internal/api/httputils"
 	"godo/internal/api/services"
 	"godo/internal/repository/entities"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -16,7 +15,7 @@ func (h *Handler) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 	var result string
 	var status int = http.StatusOK
 
-	log.Printf("Project handler - method: %v", r.Method)
+	h.log.Infof("ProjectHandler. Method: %v", r.Method)
 
 	switch r.Method {
 	case http.MethodGet:
@@ -32,6 +31,7 @@ func (h *Handler) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 		result, status = deleteProject(h.projectService, r)
 		break
 	default:
+		h.log.Errorf("Bad method %v", r.Method)
 		result = fmt.Sprintf("Bad method %s", r.Method)
 		status = http.StatusBadGateway
 		break
@@ -46,8 +46,6 @@ func getProject(projectService services.ProjectService, r *http.Request) (string
 		return getAllProjects(projectService, r)
 	}
 
-	log.Println("Fetching project with id:", projectId)
-
 	project, err := projectService.GetProjectById(projectId)
 	if err != nil {
 		return err.AsJson(), err.GetStatusCode()
@@ -58,7 +56,6 @@ func getProject(projectService services.ProjectService, r *http.Request) (string
 }
 
 func getAllProjects(projectService services.ProjectService, r *http.Request) (string, int) {
-	log.Println("Handler - fetching all projects")
 	projects, err := projectService.GetProjects()
 	if err != nil {
 		return err.AsJson(), err.GetStatusCode()

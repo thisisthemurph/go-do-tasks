@@ -1,21 +1,24 @@
 package services
 
 import (
+	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
 )
 
 type StoryService interface {
-	GetStories()				([]*entities.Story, error)
-	GetStoryById(userId string)	(*entities.Story, error)
+	GetStories() ([]*entities.Story, error)
+	GetStoryById(userId string) (*entities.Story, error)
 }
 
-type storyService struct{
+type storyService struct {
+	log   ilog.StdLogger
 	query repository.StoryQuery
 }
 
-func NewStoryService(dao repository.DAO) StoryService {
+func NewStoryService(dao repository.DAO, log ilog.StdLogger) StoryService {
 	return &storyService{
+		log:   log,
 		query: dao.NewStoryQuery(),
 	}
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"godo/internal/api/httperror"
+	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
 	"net/http"
@@ -16,12 +17,14 @@ type ProjectService interface {
 }
 
 type projectService struct {
+	log   ilog.StdLogger
 	query repository.ProjectQuery
 }
 
-func NewProjectService(dao repository.DAO) ProjectService {
+func NewProjectService(dao repository.DAO, logger ilog.StdLogger) ProjectService {
 	return &projectService{
-		query: dao.NewProjectQuery(),
+		log:   logger,
+		query: dao.NewProjectQuery(logger),
 	}
 }
 

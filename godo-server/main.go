@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"time"
 
@@ -14,15 +13,20 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/rs/cors"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	config := config.LoadConfig()
-	repository.CreateAndPopulateDatabase()
+	// Make the loggers
+	logger := makeLogger()
+	configLogger := makeLoggerWithTag("Config")
 
-	dao := repository.NewDAO()
-	handlers := buildHandlers(dao)
-	router := buildRouter(handlers)
+	config := config.LoadConfig(configLogger)
+	repository.CreateAndPopulateDatabase(logger)
+
+	dao := repository.NewDAO(makeLoggerWithTag("DAO"))
+	handlers := buildHandlers(dao, logger)
+	router := buildRouter(handlers, logger)
 
 	srv := &http.Server{
 		Addr:         "0.0.0.0:" + config.ApiPort,
@@ -32,26 +36,33 @@ func main() {
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
-func buildHandlers(dao repository.DAO) handler.IHandler {
-	projectService := services.NewProjectService(dao)
-	storyService := services.NewStoryService(dao)
+func buildHandlers(dao repository.DAO, logger logrus.FieldLogger) handler.IHandler {
+	// Make loggers with the specific required parameters
+	projectServiceLogger := makeLoggerWithTag("ProjectService")
+	storyServiceLogger := makeLoggerWithTag("ProjectService")
+
+	// Instantiate the services
+	projectService := services.NewProjectService(dao, projectServiceLogger)
+	storyService := services.NewStoryService(dao, storyServiceLogger)
 
 	return handler.MakeHandlers(
+		makeLoggerWithTag("Handler"),
 		&projectService,
 		&storyService,
 	)
 }
 
-func buildRouter(handlers handler.IHandler) *mux.Router {
+func buildRouter(handlers handler.IHandler, logger logrus.FieldLogger) *mux.Router {
 	r := mux.NewRouter()
 	router := r.PathPrefix("/api").Subrouter()
 
-	gm := middleware.GenericMiddleware{}
-	pm := middleware.ProjectMiddleware{}
+	middlewareLogger := makeLoggerWithTag("Middleware")
+	gm := middleware.NewGenericMiddleware(middlewareLogger)
+	pm := middleware.NewProjectMiddleware(middlewareLogger)
 
 	router.Use(gm.LoggingMiddleware)
 	router.HandleFunc("/project", handlers.ProjectHandler).Methods(http.MethodGet)
@@ -66,4 +77,21 @@ func buildRouter(handlers handler.IHandler) *mux.Router {
 	router.HandleFunc("/story/{id:[a-f0-9-]+}", handlers.StoryHandler)
 
 	return r
+}
+
+func makeLogger() *logrus.Logger {
+	logger := logrus.New()
+	logger.SetFormatter(&logrus.JSONFormatter{
+		DisableTimestamp: true,
+		PrettyPrint:      true,
+	})
+
+	return logger
+}
+
+func makeLoggerWithTag(tag string) logrus.FieldLogger {
+	logger := makeLogger()
+	return logger.WithFields(logrus.Fields{
+		"tag": tag,
+	})
 }

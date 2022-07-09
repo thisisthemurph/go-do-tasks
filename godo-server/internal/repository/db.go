@@ -3,22 +3,23 @@ package repository
 import (
 	"fmt"
 	"godo/internal/config"
+	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 
 	"github.com/jinzhu/gorm"
 )
 
-func CreateAndPopulateDatabase() {
-	db := connect()
+func CreateAndPopulateDatabase(logger ilog.StdLogger) {
+	db := connect(logger)
 	populateDatabase(db)
 }
 
-func GetDatabase() *gorm.DB {
-	return connect()
+func GetDatabase(logger ilog.StdLogger) *gorm.DB {
+	return connect(logger)
 }
 
-func connect() *gorm.DB {
-	configuration := config.LoadConfig()
+func connect(logger ilog.StdLogger) *gorm.DB {
+	configuration := config.LoadConfig(logger)
 	connectionString := makeConnectionString(configuration)
 
 	db, err := gorm.Open("postgres", connectionString)
