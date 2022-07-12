@@ -20,13 +20,15 @@ func main() {
 	// Make the loggers
 	logger := makeLogger()
 	configLogger := makeLoggerWithTag("Config")
+	daoLogger := makeLoggerWithTag("DAO")
 
 	config := config.LoadConfig(configLogger)
 	repository.CreateAndPopulateDatabase(logger)
 
-	dao := repository.NewDAO(makeLoggerWithTag("DAO"))
-	handlers := buildHandlers(dao, logger)
-	router := buildRouter(handlers, logger)
+	dao := repository.NewDAO(daoLogger)
+	servicesCollection := buildServices(dao)
+	handlers := buildHandlers(servicesCollection, logger)
+	router := buildRouter(servicesCollection, handlers, logger)
 
 	srv := &http.Server{
 		Addr:         "0.0.0.0:" + config.ApiPort,
@@ -40,40 +42,69 @@ func main() {
 	}
 }
 
-func buildHandlers(dao repository.DAO, logger logrus.FieldLogger) handler.IHandler {
+type ServicesCollection struct {
+	authService    services.AuthService
+	userService    services.UserService
+	projectService services.ProjectService
+	storyService   services.StoryService
+}
+
+func buildServices(dao repository.DAO) ServicesCollection {
 	// Make loggers with the specific required parameters
+	authServiceLogger := makeLoggerWithTag("AuthService")
+	userServiceLogger := makeLoggerWithTag("UserService")
+	userQueryLogger := makeLoggerWithTag("UserQuery")
 	projectServiceLogger := makeLoggerWithTag("ProjectService")
 	storyServiceLogger := makeLoggerWithTag("ProjectService")
 	projectQueryLogger := makeLoggerWithTag("ProjectRepo")
 	storyQueryLogger := makeLoggerWithTag("StoryRepo")
-	handlerLogger := makeLoggerWithTag("Handler")
 
 	// Initialize the repositories
+	userQuery := dao.NewApiUserQuery(userQueryLogger)
 	projectQuery := dao.NewProjectQuery(projectQueryLogger)
 	storyQuery := dao.NewStoryQuery(storyQueryLogger)
 
 	// Initialize the services
+	authService := services.NewAuthService(userQuery, authServiceLogger)
+	userService := services.NewUserService(userQuery, userServiceLogger)
 	projectService := services.NewProjectService(projectQuery, projectServiceLogger)
 	storyService := services.NewStoryService(storyQuery, storyServiceLogger)
 
+	return ServicesCollection{
+		authService,
+		userService,
+		projectService,
+		storyService,
+	}
+}
+
+func buildHandlers(collection ServicesCollection, logger logrus.FieldLogger) handler.IHandler {
+	handlerLogger := makeLoggerWithTag("Handler")
+
 	return handler.MakeHandlers(
 		handlerLogger,
-		&projectService,
-		&storyService,
+		&collection.projectService,
+		&collection.storyService,
+		&collection.authService,
+		&collection.userService,
 	)
 }
 
-func buildRouter(handlers handler.IHandler, logger logrus.FieldLogger) *mux.Router {
+func buildRouter(collection ServicesCollection, handlers handler.IHandler, logger logrus.FieldLogger) *mux.Router {
 	r := mux.NewRouter()
 	router := r.PathPrefix("/api").Subrouter()
 
 	middlewareLogger := makeLoggerWithTag("Middleware")
+	am := middleware.NewAuthMiddleware(middlewareLogger, collection.authService)
 	gm := middleware.NewGenericMiddleware(middlewareLogger)
 	pm := middleware.NewProjectMiddleware(middlewareLogger)
 
 	router.Use(gm.LoggingMiddleware)
-	router.HandleFunc("/project", handlers.ProjectHandler).Methods(http.MethodGet)
-	router.HandleFunc("/project/{id:[a-f0-9-]+}", handlers.ProjectHandler).Methods(http.MethodGet, http.MethodDelete)
+
+	projectGetHandler := router.Methods(http.MethodGet, http.MethodDelete).Subrouter()
+	projectGetHandler.HandleFunc("/project", handlers.ProjectHandler)
+	projectGetHandler.HandleFunc("/project/{id:[a-f0-9-]+}", handlers.ProjectHandler)
+	projectGetHandler.Use(am.AuthenticateRequestMiddleware)
 
 	projectWithBodySubRouter := router.Methods(http.MethodPost, http.MethodPut).Subrouter()
 	projectWithBodySubRouter.HandleFunc("/project", handlers.ProjectHandler)
@@ -82,6 +113,17 @@ func buildRouter(handlers handler.IHandler, logger logrus.FieldLogger) *mux.Rout
 
 	router.HandleFunc("/story", handlers.StoryHandler).Methods(http.MethodGet)
 	router.HandleFunc("/story/{id:[a-f0-9-]+}", handlers.StoryHandler)
+
+	userHandlerLogger := makeLoggerWithTag("userHandler")
+	userHandler := handler.NewUsersHandler(
+		userHandlerLogger,
+		collection.authService,
+		collection.userService,
+	)
+
+	userAuthRouter := router.Methods(http.MethodPost).Subrouter()
+	userAuthRouter.HandleFunc("/auth/login", userHandler.Login)
+	userAuthRouter.HandleFunc("/auth/register", userHandler.Register)
 
 	return r
 }

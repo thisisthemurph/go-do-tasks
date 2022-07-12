@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"godo/internal/auth"
 	"godo/internal/config"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
@@ -11,7 +12,10 @@ import (
 
 func CreateAndPopulateDatabase(logger ilog.StdLogger) {
 	db := connect(logger)
-	populateDatabase(db)
+
+	dropAllTables(db)
+	migrate(db)
+	// populateTestData(db)
 }
 
 func GetDatabase(logger ilog.StdLogger) *gorm.DB {
@@ -41,21 +45,26 @@ func makeConnectionString(config config.Config) string {
 	)
 }
 
-func populateDatabase(db *gorm.DB) {
-	// Drop the tables to refresh the data
-	db.DropTableIfExists(&entities.Person{})
+func dropAllTables(db *gorm.DB) {
+	// db.DropTableIfExists(&entities.Person{})
+	db.DropTableIfExists(&auth.User{})
 	db.DropTableIfExists(&entities.Project{})
 	db.DropTableIfExists(&entities.Story{})
 	db.DropTableIfExists(&entities.Task{})
 	db.DropTableIfExists(&entities.Tag{})
 	db.DropTableIfExists("task_tags")
 
-	// Create the tables and add the data
-	db.AutoMigrate(&entities.Person{})
+}
+
+func migrate(db *gorm.DB) {
+	// db.AutoMigrate(&entities.Person{})
+	db.AutoMigrate(&auth.User{})
 	db.AutoMigrate(&entities.Project{})
 	db.AutoMigrate(&entities.Story{})
 	db.AutoMigrate(&entities.Task{})
 	db.AutoMigrate(&entities.Tag{})
+}
 
+func populateTestData(db *gorm.DB) {
 	db.Create(&project)
 }

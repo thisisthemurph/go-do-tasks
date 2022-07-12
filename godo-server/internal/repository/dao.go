@@ -9,6 +9,7 @@ import (
 type DAO interface {
 	NewStoryQuery(logger ilog.StdLogger) StoryQuery
 	NewProjectQuery(logger ilog.StdLogger) ProjectQuery
+	NewApiUserQuery(logger ilog.StdLogger) ApiUserQuery
 }
 
 type dao struct {

@@ -13,20 +13,26 @@ type IHandler interface {
 }
 
 type Handler struct {
+	authService    services.AuthService
 	log            ilog.StdLogger
 	projectService services.ProjectService
 	storyService   services.StoryService
+	userService    services.UserService
 }
 
 func MakeHandlers(
 	logger ilog.StdLogger,
 	projectService *services.ProjectService,
-	storyService *services.StoryService) IHandler {
+	storyService *services.StoryService,
+	authService *services.AuthService,
+	userService *services.UserService) IHandler {
 
 	return &Handler{
 		log:            logger,
 		projectService: *projectService,
 		storyService:   *storyService,
+		authService:    *authService,
+		userService:    *userService,
 	}
 }
 

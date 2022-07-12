@@ -1,10 +1,23 @@
 package repository
 
-import "godo/internal/repository/entities"
+import (
+	"godo/internal/auth"
+	"godo/internal/repository/entities"
+)
 
 var (
-	user1 = entities.Person{Name: "Ash"}
-	user2 = entities.Person{Name: "Misty"}
+	user1 = auth.User{
+		Name:     "Ash",
+		Email:    "askcatchem@pokemon.com",
+		Username: "ash",
+		Password: "password",
+	}
+	user2 = auth.User{
+		Name:     "Misty",
+		Email:    "starmemisty@pokegym.com",
+		Username: "misty",
+		Password: "password",
+	}
 
 	qaTag      = entities.Tag{Name: "QA"}
 	onHoldTag  = entities.Tag{Name: "On hold"}
