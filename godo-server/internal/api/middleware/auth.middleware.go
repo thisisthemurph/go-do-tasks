@@ -23,6 +23,8 @@ func NewAuthMiddleware(logger ilog.StdLogger, authService services.AuthService) 
 	}
 }
 
+// Used to validate a request for a JWT
+// The TokenRequest represents the auth data (e.g. emil and password) user to authenticate
 func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var tr auth.TokenRequest
@@ -55,6 +57,7 @@ func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.
 	})
 }
 
+// Used to authenticate a given JWT
 func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		unauthorizedHttpError := httperror.New(http.StatusUnauthorized, "")
@@ -67,7 +70,6 @@ func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.H
 		}
 
 		// Validate that the token string looks alright
-
 		if !strings.HasPrefix(tokenValue, "Bearer") {
 			m.log.Info("Bad token: the token does not start with `Bearer`")
 			http.Error(w, "Unauthorized", unauthorizedHttpError.GetStatusCode())
@@ -76,13 +78,12 @@ func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.H
 
 		tokenParts := strings.SplitAfter(tokenValue, " ")
 		if len(tokenParts) != 2 {
-			m.log.Info("The beater token does not follow the correct format")
+			m.log.Info("The bearer token does not follow the correct format")
 			http.Error(w, "Unauthorized", unauthorizedHttpError.GetStatusCode())
 			return
 		}
 
 		// Validate the auth token
-
 		err := m.authService.ValidateToken(tokenParts[1])
 		if err != nil {
 			m.log.Info("The token is not valid")

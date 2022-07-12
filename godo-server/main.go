@@ -109,10 +109,8 @@ func buildRouter(collection ServicesCollection, handlers handler.IHandler, logge
 	projectWithBodySubRouter := router.Methods(http.MethodPost, http.MethodPut).Subrouter()
 	projectWithBodySubRouter.HandleFunc("/project", handlers.ProjectHandler)
 	projectWithBodySubRouter.HandleFunc("/project/{id:[a-f0-9-]+}", handlers.ProjectHandler)
+	projectWithBodySubRouter.Use(am.AuthenticateRequestMiddleware)
 	projectWithBodySubRouter.Use(pm.ValidateProjectMiddleware)
-
-	router.HandleFunc("/story", handlers.StoryHandler).Methods(http.MethodGet)
-	router.HandleFunc("/story/{id:[a-f0-9-]+}", handlers.StoryHandler)
 
 	userHandlerLogger := makeLoggerWithTag("userHandler")
 	userHandler := handler.NewUsersHandler(
