@@ -17,7 +17,7 @@ type Project struct {
 	Name        string    `json:"name" validate:"required,min=1,max=40"`
 	Description string    `json:"description" validate:"max=280"`
 	CreatorId   string    `json:"-"`
-	Creator     auth.User `gorm:"foreignKey:CreatorId"`
+	Creator     auth.User `json:"creator" gorm:"foreignKey:CreatorId"`
 	Stories     []Story
 	Tags        []Tag
 }

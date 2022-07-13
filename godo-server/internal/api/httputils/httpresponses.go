@@ -17,7 +17,7 @@ type HttpError struct {
 	Message    string `json:"errorMessage"`
 }
 
-func (h HttpError) String() (string) {
+func (h HttpError) String() string {
 	data, _ := json.Marshal(h)
 	return string(data)
 }

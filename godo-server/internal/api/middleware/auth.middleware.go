@@ -8,18 +8,22 @@ import (
 	"godo/internal/auth"
 	"godo/internal/helper/ilog"
 	"net/http"
-	"strings"
 )
 
 type AuthMiddleware struct {
 	log         ilog.StdLogger
 	authService services.AuthService
+	userService services.UserService
 }
 
-func NewAuthMiddleware(logger ilog.StdLogger, authService services.AuthService) AuthMiddleware {
+func NewAuthMiddleware(
+	logger ilog.StdLogger,
+	authService services.AuthService,
+	userService services.UserService) AuthMiddleware {
 	return AuthMiddleware{
 		log:         logger,
 		authService: authService,
+		userService: userService,
 	}
 }
 
@@ -50,6 +54,7 @@ func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.
 		}
 
 		// Add the TokenRequest to the context
+		m.log.Info("Adding auth TokenRequest to context ", tr)
 		ctx := context.WithValue(r.Context(), auth.TokenRequestKey{}, tr)
 		r = r.WithContext(ctx)
 
@@ -60,36 +65,42 @@ func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.
 // Used to authenticate a given JWT
 func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		unauthorizedHttpError := httperror.New(http.StatusUnauthorized, "")
 		tokenValue := r.Header.Get("Authorization")
 
-		if tokenValue == "" {
-			m.log.Info("No authorization token included in header")
-			http.Error(w, "Unauthorized", unauthorizedHttpError.GetStatusCode())
-			return
-		}
-
-		// Validate that the token string looks alright
-		if !strings.HasPrefix(tokenValue, "Bearer") {
-			m.log.Info("Bad token: the token does not start with `Bearer`")
-			http.Error(w, "Unauthorized", unauthorizedHttpError.GetStatusCode())
-			return
-		}
-
-		tokenParts := strings.SplitAfter(tokenValue, " ")
-		if len(tokenParts) != 2 {
-			m.log.Info("The bearer token does not follow the correct format")
-			http.Error(w, "Unauthorized", unauthorizedHttpError.GetStatusCode())
-			return
+		// Convert the token from `Bearer abc123` to `abc123`
+		// This also validates the given token string value
+		token, err := m.authService.BearerTokenToToken(tokenValue)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		}
 
 		// Validate the auth token
-		err := m.authService.ValidateToken(tokenParts[1])
+		err = m.authService.ValidateTokenClaims(token)
 		if err != nil {
 			m.log.Info("The token is not valid")
-			http.Error(w, "Unauthorized", unauthorizedHttpError.GetStatusCode())
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+
+		// Fetch the appropriate user
+		claims, err := m.authService.GetClaims(token)
+		if err != nil {
+			m.log.Error("Could not get claims from the token")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		user, err := m.userService.GetUserByEmailAddress(claims.Email)
+		if err != nil {
+			m.log.Error("Could not determine user with email address %s from signed token", claims.Email)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Attach the user to the context
+		m.log.Info("Adding user to context ", user)
+		ctx := context.WithValue(r.Context(), auth.UserKey{}, user)
+		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})

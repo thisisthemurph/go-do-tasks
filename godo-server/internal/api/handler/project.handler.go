@@ -1,83 +1,79 @@
 package handler
 
 import (
-	"fmt"
+	"godo/internal/api/dto"
 	"godo/internal/api/httperror"
 	"godo/internal/api/httputils"
 	"godo/internal/api/services"
+	"godo/internal/auth"
+	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-func (h *Handler) ProjectHandler(w http.ResponseWriter, r *http.Request) {
-	var result string
-	var status int = http.StatusOK
-
-	h.log.Infof("ProjectHandler. Method: %v", r.Method)
-
-	switch r.Method {
-	case http.MethodGet:
-		result, status = getProject(h.projectService, r)
-		break
-	case http.MethodPost:
-		result, status = createProject(h.projectService, r)
-		break
-	case http.MethodPut:
-		result, status = updateProject(h.projectService, r)
-		break
-	case http.MethodDelete:
-		result, status = deleteProject(h.projectService, r)
-		break
-	default:
-		h.log.Errorf("Bad method %v", r.Method)
-		result = fmt.Sprintf("Bad method %s", r.Method)
-		status = http.StatusBadGateway
-		break
-	}
-
-	httputils.MakeHttpResponse(w, result, status)
+type Projects struct {
+	log            ilog.StdLogger
+	projectService services.ProjectService
 }
 
-func getProject(projectService services.ProjectService, r *http.Request) (string, int) {
+func NewProjectsHandler(logger ilog.StdLogger, projectService services.ProjectService) Projects {
+	return Projects{log: logger, projectService: projectService}
+}
+
+func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	projectId, paramIdExists := getParamFomRequest(r, "id")
 	if !paramIdExists {
-		return getAllProjects(projectService, r)
+		http.Error(w, "", http.StatusBadRequest)
+		return
 	}
 
-	project, err := projectService.GetProjectById(projectId)
+	project, err := p.projectService.GetProjectById(projectId)
 	if err != nil {
-		return err.AsJson(), err.GetStatusCode()
+		http.Error(w, err.AsJson(), err.GetStatusCode())
+		return
 	}
 
 	json, _ := dataToJson(*project)
-	return json, http.StatusOK
+	httputils.MakeHttpResponse(w, json, http.StatusOK)
 }
 
-func getAllProjects(projectService services.ProjectService, r *http.Request) (string, int) {
-	projects, err := projectService.GetProjects()
+func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
+	projects, err := p.projectService.GetProjects()
 	if err != nil {
-		return err.AsJson(), err.GetStatusCode()
+		http.Error(w, err.AsJson(), err.GetStatusCode())
+		return
 	}
 
 	json, _ := dataToJson(projects)
-	return json, http.StatusOK
+	httputils.MakeHttpResponse(w, json, http.StatusOK)
 }
 
-func createProject(projectService services.ProjectService, r *http.Request) (string, int) {
-	var project entities.Project
-	project.FromHttpRequest(r)
+func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
+	var projectDto dto.NewProjectDto
+	projectDto = r.Context().Value(entities.ProjectKey{}).(dto.NewProjectDto)
 
-	err := projectService.CreateProject(&project)
-	if err != nil {
-		return err.AsJson(), err.GetStatusCode()
+	var user auth.User
+	user = r.Context().Value(auth.UserKey{}).(auth.User)
+
+	project := entities.Project{
+		Name:        projectDto.Name,
+		Description: projectDto.Description,
+		Creator:     user,
 	}
 
-	return "", http.StatusOK
+	err2 := p.projectService.CreateProject(&project)
+	if err2 != nil {
+		http.Error(w, err2.AsJson(), err2.GetStatusCode())
+		return
+	}
+
+	result, _ := dataToJson(project)
+	httputils.MakeHttpResponse(w, result, http.StatusOK)
 }
 
-func updateProject(projectService services.ProjectService, r *http.Request) (string, int) {
+func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	newProjectData := &entities.Project{}
 	projectId, _ := getParamFomRequest(r, "id")
 
@@ -85,27 +81,30 @@ func updateProject(projectService services.ProjectService, r *http.Request) (str
 	requestErr := newProjectData.FromJSON(r.Body)
 	if requestErr != nil {
 		err := httperror.New(http.StatusInternalServerError, "There has been an issue processing the update")
-		return err.AsJson(), err.GetStatusCode()
+		httputils.MakeHttpError(err.GetStatusCode(), err.AsJson())
+		return
 	}
 
 	// Update the project
-	err := projectService.UpdateProject(projectId, newProjectData)
+	err := p.projectService.UpdateProject(projectId, newProjectData)
 	if err != nil {
-		return err.AsJson(), err.GetStatusCode()
+		httputils.MakeHttpError(err.GetStatusCode(), err.AsJson())
+		return
 	}
 
-	return "", http.StatusOK
+	httputils.MakeHttpResponse(w, "", http.StatusOK)
 }
 
-func deleteProject(projectService services.ProjectService, r *http.Request) (string, int) {
+func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	projectId, _ := getParamFomRequest(r, "id")
 
-	err := projectService.DeleteProject(projectId)
+	err := p.projectService.DeleteProject(projectId)
 	if err != nil {
-		return err.AsJson(), err.GetStatusCode()
+		httputils.MakeHttpError(err.GetStatusCode(), err.AsJson())
+		return
 	}
 
-	return "", http.StatusOK
+	httputils.MakeHttpResponse(w, "", http.StatusOK)
 }
 
 func getParamFomRequest(r *http.Request, param string) (string, bool) {

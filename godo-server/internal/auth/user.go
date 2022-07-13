@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -20,6 +21,10 @@ type User struct {
 }
 
 type UserKey struct{}
+
+func (u *User) String() string {
+	return fmt.Sprintf("User{ID: %d, Name: %s}", u.ID, u.Name)
+}
 
 func (u *User) HashPassword(password string) error {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 14)

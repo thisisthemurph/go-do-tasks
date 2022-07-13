@@ -8,7 +8,6 @@ import (
 )
 
 type IHandler interface {
-	ProjectHandler(http.ResponseWriter, *http.Request)
 	StoryHandler(http.ResponseWriter, *http.Request)
 }
 

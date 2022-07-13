@@ -90,33 +90,34 @@ func buildHandlers(collection ServicesCollection, logger logrus.FieldLogger) han
 	)
 }
 
-func buildRouter(collection ServicesCollection, handlers handler.IHandler, logger logrus.FieldLogger) *mux.Router {
-	r := mux.NewRouter()
-	router := r.PathPrefix("/api").Subrouter()
-
+func buildRouter(services ServicesCollection, handlers handler.IHandler, logger logrus.FieldLogger) *mux.Router {
 	middlewareLogger := makeLoggerWithTag("Middleware")
-	am := middleware.NewAuthMiddleware(middlewareLogger, collection.authService)
+	projectLogger := makeLoggerWithTag("ProjectHandler")
+
+	am := middleware.NewAuthMiddleware(middlewareLogger, services.authService, services.userService)
 	gm := middleware.NewGenericMiddleware(middlewareLogger)
 	pm := middleware.NewProjectMiddleware(middlewareLogger)
 
+	r := mux.NewRouter()
+	router := r.PathPrefix("/api").Subrouter()
 	router.Use(gm.LoggingMiddleware)
 
-	projectGetHandler := router.Methods(http.MethodGet, http.MethodDelete).Subrouter()
-	projectGetHandler.HandleFunc("/project", handlers.ProjectHandler)
-	projectGetHandler.HandleFunc("/project/{id:[a-f0-9-]+}", handlers.ProjectHandler)
-	projectGetHandler.Use(am.AuthenticateRequestMiddleware)
+	projectHandler := handler.NewProjectsHandler(projectLogger, services.projectService)
+	projectGetRouter := router.Methods(http.MethodGet).Subrouter()
+	projectGetRouter.HandleFunc("/project", projectHandler.GetAllProjects)
+	projectGetRouter.HandleFunc("/project/{id:[a-f0-9-]+}", projectHandler.GetProjectById)
+	projectGetRouter.Use(am.AuthenticateRequestMiddleware)
 
-	projectWithBodySubRouter := router.Methods(http.MethodPost, http.MethodPut).Subrouter()
-	projectWithBodySubRouter.HandleFunc("/project", handlers.ProjectHandler)
-	projectWithBodySubRouter.HandleFunc("/project/{id:[a-f0-9-]+}", handlers.ProjectHandler)
-	projectWithBodySubRouter.Use(am.AuthenticateRequestMiddleware)
-	projectWithBodySubRouter.Use(pm.ValidateProjectMiddleware)
+	projectPostRouter := router.Methods(http.MethodPost).Subrouter()
+	projectPostRouter.HandleFunc("/project", projectHandler.CreateProject)
+	projectPostRouter.Use(am.AuthenticateRequestMiddleware)
+	projectPostRouter.Use(pm.ValidateNewProjectDtoMiddleware)
 
 	userHandlerLogger := makeLoggerWithTag("userHandler")
 	userHandler := handler.NewUsersHandler(
 		userHandlerLogger,
-		collection.authService,
-		collection.userService,
+		services.authService,
+		services.userService,
 	)
 
 	userAuthRouter := router.Methods(http.MethodPost).Subrouter()
