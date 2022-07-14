@@ -14,10 +14,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Email    string `json:"email" gorm:"unique" validate:"required"`
-	Password string `json:"-" validate:"required"`
+	Name          string `json:"name" validate:"required,min=1,max=25"`
+	Username      string `json:"username" gorm:"index" validate:"required"`
+	Discriminator uint   `json:"discriminator" validate:"required"`
+	Email         string `json:"email" gorm:"unique,index" validate:"required"`
+	Password      string `json:"-" validate:"required"`
 }
 
 type UserKey struct{}

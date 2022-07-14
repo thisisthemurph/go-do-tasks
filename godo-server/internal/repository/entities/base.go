@@ -16,9 +16,9 @@ type Base struct {
 type Bases []*Base
 
 type TimestampBase struct {
-	CreatedAt time.Time  `json:"-"`
-	UpdatedAt time.Time  `json:"-"`
-	DeletedAt *time.Time `sql:"index" json:"-"`
+	CreatedAt time.Time  `json:"-" gorm:"autoCreateTime"`
+	UpdatedAt time.Time  `json:"-" gorm:"autoUpdateTime"`
+	DeletedAt *time.Time `sql:"index" json:"-" gorm:""`
 }
 
 func (base *Base) BeforeCreate(scope *gorm.Scope) error {

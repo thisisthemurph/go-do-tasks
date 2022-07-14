@@ -18,7 +18,7 @@ type Project struct {
 	Description string    `json:"description" validate:"max=280"`
 	CreatorId   string    `json:"-"`
 	Creator     auth.User `json:"creator" gorm:"foreignKey:CreatorId"`
-	Stories     []Story
+	Stories     []Story   `json:"stories"`
 
 	TimestampBase
 }
