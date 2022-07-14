@@ -26,7 +26,7 @@ func main() {
 	repository.CreateAndPopulateDatabase(logger)
 
 	dao := repository.NewDAO(daoLogger)
-	servicesCollection := buildServices(dao)
+	servicesCollection := buildServices(dao, config)
 	handlers := buildHandlers(servicesCollection, logger)
 	router := buildRouter(servicesCollection, handlers, logger)
 
@@ -49,7 +49,7 @@ type ServicesCollection struct {
 	storyService   services.StoryService
 }
 
-func buildServices(dao repository.DAO) ServicesCollection {
+func buildServices(dao repository.DAO, config config.Config) ServicesCollection {
 	// Make loggers with the specific required parameters
 	authServiceLogger := makeLoggerWithTag("AuthService")
 	userServiceLogger := makeLoggerWithTag("UserService")
@@ -65,7 +65,7 @@ func buildServices(dao repository.DAO) ServicesCollection {
 	storyQuery := dao.NewStoryQuery(storyQueryLogger)
 
 	// Initialize the services
-	authService := services.NewAuthService(userQuery, authServiceLogger)
+	authService := services.NewAuthService(userQuery, []byte(config.JWTKey), authServiceLogger)
 	userService := services.NewUserService(userQuery, userServiceLogger)
 	projectService := services.NewProjectService(projectQuery, projectServiceLogger)
 	storyService := services.NewStoryService(storyQuery, storyServiceLogger)

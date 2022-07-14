@@ -18,19 +18,18 @@ type AuthService interface {
 }
 
 type authService struct {
-	log   ilog.StdLogger
-	query repository.ApiUserQuery
+	jwtSecret []byte
+	log       ilog.StdLogger
+	query     repository.ApiUserQuery
 }
 
-func NewAuthService(apiUserQuery repository.ApiUserQuery, logger ilog.StdLogger) AuthService {
+func NewAuthService(apiUserQuery repository.ApiUserQuery, jwtSecret []byte, logger ilog.StdLogger) AuthService {
 	return &authService{
-		log:   logger,
-		query: apiUserQuery,
+		query:     apiUserQuery,
+		jwtSecret: jwtSecret,
+		log:       logger,
 	}
 }
-
-// TODO: Place key in config
-var jwtKey = []byte("remove this key")
 
 type JWTClaim struct {
 	Username string `json:"username"`
@@ -50,7 +49,7 @@ func (s *authService) GenerateJWT(email string, username string) (token string, 
 	}
 
 	t := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	token, err = t.SignedString(jwtKey)
+	token, err = t.SignedString(s.jwtSecret)
 	return
 }
 
@@ -73,7 +72,7 @@ func (s *authService) GetClaims(signedToken string) (*JWTClaim, error) {
 		signedToken,
 		&JWTClaim{},
 		func(token *jwt.Token) (interface{}, error) {
-			return []byte(jwtKey), nil
+			return s.jwtSecret, nil
 		},
 	)
 

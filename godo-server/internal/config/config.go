@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseUsername string `mapstructure:"DB_UNAME"`
 	DatabasePassword string `mapstructure:"DB_PASSWORD"`
 	ApiPort          string `mapstructure:"API_PORT"`
+	JWTKey           string `mapstructure:"JWT_KEY"`
 }
 
 func LoadDevConfig(logger ilog.StdLogger) (conf Config) {
