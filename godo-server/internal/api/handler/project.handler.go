@@ -1,9 +1,8 @@
 package handler
 
 import (
+	"godo/internal/api"
 	"godo/internal/api/dto"
-	"godo/internal/api/httperror"
-	"godo/internal/api/httputils"
 	"godo/internal/api/services"
 	"godo/internal/auth"
 	"godo/internal/helper/ilog"
@@ -25,29 +24,36 @@ func NewProjectsHandler(logger ilog.StdLogger, projectService services.ProjectSe
 func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	projectId, paramIdExists := getParamFomRequest(r, "id")
 	if !paramIdExists {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "The ID of the Project must be specified", http.StatusBadRequest)
 		return
 	}
 
 	project, err := p.projectService.GetProjectById(projectId)
-	if err != nil {
-		http.Error(w, err.AsJson(), err.GetStatusCode())
+
+	switch err {
+	case nil:
+		break
+	case api.ProjectNotFoundError:
+		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
 		return
 	}
 
-	json, _ := dataToJson(*project)
-	httputils.MakeHttpResponse(w, json, http.StatusOK)
+	result, _ := dataToJson(*project)
+	api.Respond(result, http.StatusOK, w)
 }
 
 func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 	projects, err := p.projectService.GetProjects()
 	if err != nil {
-		http.Error(w, err.AsJson(), err.GetStatusCode())
+		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
 		return
 	}
 
-	json, _ := dataToJson(projects)
-	httputils.MakeHttpResponse(w, json, http.StatusOK)
+	result, _ := dataToJson(projects)
+	api.Respond(result, http.StatusOK, w)
 }
 
 func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
@@ -57,20 +63,25 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var user auth.User
 	user = r.Context().Value(auth.UserKey{}).(auth.User)
 
+	// TODO: Validate the DTO
+
 	project := entities.Project{
 		Name:        projectDto.Name,
 		Description: projectDto.Description,
 		Creator:     user,
 	}
 
-	err2 := p.projectService.CreateProject(&project)
-	if err2 != nil {
-		http.Error(w, err2.AsJson(), err2.GetStatusCode())
+	err := p.projectService.CreateProject(&project)
+	switch err {
+	case nil:
+		break
+	case api.ProjectNotCreatedError:
+		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
 		return
 	}
 
 	result, _ := dataToJson(project)
-	httputils.MakeHttpResponse(w, result, http.StatusOK)
+	api.Respond(result, http.StatusOK, w)
 }
 
 func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
@@ -78,33 +89,48 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	projectId, _ := getParamFomRequest(r, "id")
 
 	// Gat the new project data from the body
-	requestErr := newProjectData.FromJSON(r.Body)
-	if requestErr != nil {
-		err := httperror.New(http.StatusInternalServerError, "There has been an issue processing the update")
-		httputils.MakeHttpError(err.GetStatusCode(), err.AsJson())
+	err := newProjectData.FromJSON(r.Body)
+	if err != nil {
+		p.log.Error("Could not process Project from request body: ", err)
+		api.ReturnError("Could not process the given project", http.StatusBadRequest, w)
 		return
 	}
 
 	// Update the project
-	err := p.projectService.UpdateProject(projectId, newProjectData)
-	if err != nil {
-		httputils.MakeHttpError(err.GetStatusCode(), err.AsJson())
+	err = p.projectService.UpdateProject(projectId, newProjectData)
+
+	switch err {
+	case nil:
+		break
+	case api.ProjectNotFoundError:
+		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
 		return
 	}
 
-	httputils.MakeHttpResponse(w, "", http.StatusOK)
+	api.Respond("", http.StatusOK, w)
 }
 
 func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	projectId, _ := getParamFomRequest(r, "id")
 
+	// Delete the project
 	err := p.projectService.DeleteProject(projectId)
-	if err != nil {
-		httputils.MakeHttpError(err.GetStatusCode(), err.AsJson())
+
+	switch err {
+	case nil:
+		break
+	case api.ProjectNotFoundError:
+		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
 		return
 	}
 
-	httputils.MakeHttpResponse(w, "", http.StatusOK)
+	api.Respond("", http.StatusOK, w)
 }
 
 func getParamFomRequest(r *http.Request, param string) (string, bool) {
