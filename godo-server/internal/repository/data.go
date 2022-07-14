@@ -5,12 +5,6 @@ import (
 )
 
 var (
-	qaTag      = entities.Tag{Name: "QA"}
-	onHoldTag  = entities.Tag{Name: "On hold"}
-	easyWinTag = entities.Tag{Name: "Easy win"}
-
-	allTags = []entities.Tag{qaTag, onHoldTag, easyWinTag}
-
 	tasks1 = []entities.Task{
 		{
 			Name:        "Database structure design",
@@ -41,6 +35,5 @@ var (
 	project = entities.Project{
 		Name:        "TheMainSolution_Dev",
 		Description: "This is the description of this project/solution",
-		Tags:        allTags,
 	}
 )

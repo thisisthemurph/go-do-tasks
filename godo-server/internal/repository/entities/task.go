@@ -13,5 +13,6 @@ type Task struct {
 	Status      int
 	CreatorId   string    `json:"-"`
 	Creator     auth.User `gorm:"foreignKey:CreatorId"`
-	Tags        []Tag     `gorm:"many2many:task_tags;"`
+
+	TimestampBase
 }

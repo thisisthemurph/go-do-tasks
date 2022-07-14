@@ -10,13 +10,16 @@ import (
 )
 
 type Base struct {
-	ID        string     `json:"id"`
+	ID string `json:"id"`
+}
+
+type Bases []*Base
+
+type TimestampBase struct {
 	CreatedAt time.Time  `json:"-"`
 	UpdatedAt time.Time  `json:"-"`
 	DeletedAt *time.Time `sql:"index" json:"-"`
 }
-
-type Bases []*Base
 
 func (base *Base) BeforeCreate(scope *gorm.Scope) error {
 	id := uuid.NewV4()

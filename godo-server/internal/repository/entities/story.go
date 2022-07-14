@@ -15,6 +15,8 @@ type Story struct {
 	CreatorId   string    `json:"-"`
 	Creator     auth.User `gorm:"foreignKey:CreatorId"`
 	Tasks       []Task
+
+	TimestampBase
 }
 
 func (s Story) ToString() string {
