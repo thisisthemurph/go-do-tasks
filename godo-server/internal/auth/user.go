@@ -28,12 +28,13 @@ func (u *User) String() string {
 }
 
 func (u *User) HashPassword(password string) error {
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Println("Issue hashing password")
 		return err
 	}
 
-	u.Password = string(passwordHash)
+	u.Password = string(hash)
 	return nil
 }
 
