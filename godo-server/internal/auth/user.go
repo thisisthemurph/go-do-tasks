@@ -28,7 +28,7 @@ func (u *User) String() string {
 }
 
 func (u *User) HashPassword(password string) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
 		log.Println("Issue hashing password")
 		return err
