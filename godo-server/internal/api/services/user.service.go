@@ -1,15 +1,16 @@
 package services
 
 import (
+	"godo/internal/api"
 	"godo/internal/auth"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 )
 
 type UserService interface {
-	GetUserByEmailAddress(email string) (user auth.User, err error)
+	GetUserByEmailAddress(email string) (user *auth.User, err error)
 	UserWithEmailAddressExists(email string) (bool, error)
-	CreateUser(newUser auth.User) error
+	CreateUser(newUser auth.User) (*auth.User, error)
 }
 
 type userService struct {
@@ -24,15 +25,34 @@ func NewUserService(apiUserQuery repository.ApiUserQuery, logger ilog.StdLogger)
 	}
 }
 
-func (s *userService) GetUserByEmailAddress(email string) (user auth.User, err error) {
+func (s *userService) GetUserByEmailAddress(email string) (*auth.User, error) {
+	exists, err := s.query.UserWithEmailAddressExists(email)
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		return nil, api.UserNotFoundError
+	}
+
+	var user *auth.User
 	user, err = s.query.GetUserByEmailAddress(email)
-	return
+	return user, err
 }
 
 func (s *userService) UserWithEmailAddressExists(email string) (bool, error) {
 	return s.query.UserWithEmailAddressExists(email)
 }
 
-func (s *userService) CreateUser(user auth.User) error {
-	return s.query.CreateUser(user)
+func (s *userService) CreateUser(newUser auth.User) (*auth.User, error) {
+	exists, err := s.query.UserWithEmailAddressExists(newUser.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, api.UserAlreadyExistsError
+	}
+
+	return s.query.CreateUser(newUser)
 }

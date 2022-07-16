@@ -2,8 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"godo/internal/api/httperror"
-	"godo/internal/api/httputils"
+	"godo/internal/api"
 	"godo/internal/api/services"
 	"godo/internal/auth"
 	"godo/internal/helper/ilog"
@@ -37,7 +36,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	var request LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		api.ReturnError(err.Error(), http.StatusBadRequest, w)
 		return
 	}
 
@@ -45,15 +44,20 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	validate := validator.New()
 	err = validate.Struct(request)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		api.ReturnError(err.Error(), http.StatusBadRequest, w)
 		return
 	}
 
 	// Does the user exist?
 	user, err := u.userService.GetUserByEmailAddress(request.Email)
-	if err != nil {
-		u.log.Warnf("User %s already exists", request.Email)
-		http.Error(w, userAuthenticationError, http.StatusNotFound)
+	switch err {
+	case nil:
+		break
+	case api.UserNotFoundError:
+		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
 		return
 	}
 
@@ -61,20 +65,19 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	err = user.VerifyPassword(request.Password)
 	if err != nil {
 		u.log.Warn("Bad authentication: incorrect password")
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		api.ReturnError(err.Error(), http.StatusUnauthorized, w)
 		return
 	}
 
 	// Gat a token for the user
 	token, err := u.authService.GenerateJWT(user.Email, user.Username)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
 		return
 	}
 
 	response := LoginResponse{token}
-	responseJson, _ := json.Marshal(response)
-	httputils.MakeHttpResponse(w, string(responseJson), http.StatusOK)
+	api.Respond(response, http.StatusOK, w)
 }
 
 type RegistrationRequest struct {
@@ -88,35 +91,39 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	var request RegistrationRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		api.ReturnError(err.Error(), http.StatusBadRequest, w)
 		return
 	}
 
-	// Validate the request
+	// Validate the registration body data
 	validate := validator.New()
 	err = validate.Struct(request)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		api.ReturnError(err.Error(), http.StatusBadRequest, w)
 		return
 	}
 
-	// Create the user
-	user := auth.User{
+	// Create the newUser
+	newUser := auth.User{
 		Name:     request.Name,
 		Email:    request.Email,
 		Username: request.Username,
 		Password: request.Password,
 	}
 
-	err = u.userService.CreateUser(user)
-	if err != nil {
-		httpErr := httperror.New(http.StatusInternalServerError, "Unable to register user")
-		http.Error(w, httpErr.AsJson(), httpErr.GetStatusCode())
+	var createdUser *auth.User
+	createdUser, err = u.userService.CreateUser(newUser)
+
+	switch err {
+	case nil:
+		break
+	case api.UserAlreadyExistsError:
+		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		return
 	}
 
-	// var userData string
-	var d []byte
-	d, _ = json.Marshal(user)
-
-	httputils.MakeHttpResponse(w, string(d), http.StatusCreated)
+	api.Respond(createdUser, http.StatusOK, w)
 }

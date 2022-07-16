@@ -3,13 +3,14 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"godo/internal/api"
 	"godo/internal/auth"
 	"godo/internal/helper/ilog"
 )
 
 type ApiUserQuery interface {
-	CreateUser(user auth.User) error
-	GetUserByEmailAddress(email string) (auth.User, error)
+	CreateUser(user auth.User) (*auth.User, error)
+	GetUserByEmailAddress(email string) (*auth.User, error)
 	UserWithEmailAddressExists(email string) (bool, error)
 }
 
@@ -21,7 +22,7 @@ func (d *dao) NewApiUserQuery(logger ilog.StdLogger) ApiUserQuery {
 	return &apiUserQuery{log: logger}
 }
 
-func (q *apiUserQuery) CreateUser(newUser auth.User) error {
+func (q *apiUserQuery) CreateUser(newUser auth.User) (*auth.User, error) {
 	q.log.Info("Registering new user")
 
 	// Check if a user with the username or email already exists
@@ -30,7 +31,7 @@ func (q *apiUserQuery) CreateUser(newUser auth.User) error {
 
 	if result.RowsAffected >= 1 {
 		q.log.Errorf("A user already exists with the given email address: %s", newUser.Email)
-		return errors.New("A user with the given email address already exists")
+		return nil, api.UserNotFoundError
 	}
 
 	// Add the discriminator to the user
@@ -40,52 +41,65 @@ func (q *apiUserQuery) CreateUser(newUser auth.User) error {
 	// Validate the user
 	err := newUser.Validate()
 	if err != nil {
-		q.log.Warn("The user dod not pass validation. ", err)
-		return errors.New(fmt.Sprintf("The user is not valid: %s", err.Error()))
+		q.log.Warn("The user did not pass validation. ", err)
+		return nil, errors.New(fmt.Sprintf("The user is not valid: %s", err.Error()))
+	}
+
+	// Hash the user's password
+	if err := newUser.HashPassword(newUser.Password); err != nil {
+		q.log.Error("Could not hash the user's password when creating user")
+		return nil, err
 	}
 
 	// Insert the user into the database
-	if err := newUser.HashPassword(newUser.Password); err != nil {
-		q.log.Error("Could not hash the user's password when creating user")
-		return err
-	}
-
 	err = Database.Create(&newUser).Error
 	ilog.ErrorlnIf(err, q.log)
 
-	return err
+	return &newUser, err
 }
 
-func (q *apiUserQuery) GetUserByEmailAddress(email string) (user auth.User, err error) {
-	err = Database.First(&user, "email = ?", email).Error
+func (q *apiUserQuery) GetUserByEmailAddress(email string) (*auth.User, error) {
+	var user auth.User
+	err := Database.First(&user, "email = ?", email).Error
 
 	if err != nil {
-		q.log.Error("There was an issue obtaining the user from the database")
+		q.log.Warn("There was an issue obtaining the user from the database")
 		q.log.Error(err)
+		return nil, api.UserNotFoundError
 	}
 
-	return
+	return &user, nil
 }
 
 func (q *apiUserQuery) UserWithEmailAddressExists(email string) (bool, error) {
-	_, err := q.GetUserByEmailAddress(email)
-	return err != nil, err
+	// _, err := q.GetUserByEmailAddress(email)
+
+	var count int64
+	r := Database.Model(&auth.User{}).
+		Where("email = ?", email).
+		Count(&count)
+
+	return count >= 1, r.Error
 }
 
 func (q *apiUserQuery) GetNextDiscriminator(username string) uint32 {
-	var discriminator uint32
-	row := Database.Table("users").Where("username = ?", username).Select("max(discriminator)")
-	err := row.Scan(&discriminator)
+	var result uint32
+	row := Database.Table("users").
+		Where("username = ?", username).
+		Select("max(discriminator)").
+		Row()
 
+	err := row.Scan(&result)
 	if err != nil {
-		q.log.Infof("No users with username %s selecting discriminator of 1", username)
+		q.log.Infof("No user with username %s exists. Using discriminator of 1.", username)
+		q.log.Error(err.Error())
 		return 1
 	}
 
-	if discriminator < 1 {
-		q.log.Warnf("A < 1 result of %d was returned for the discriminator", discriminator)
+	if result < 1 {
+		q.log.Warnf("A less than 1 result of %d was returned for the discriminator", result)
 		return 1
 	}
 
-	return discriminator + 1
+	return result + 1
 }
