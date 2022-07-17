@@ -2,7 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"godo/internal/auth"
 	"godo/internal/config"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
@@ -15,7 +14,7 @@ func CreateAndPopulateDatabase(logger ilog.StdLogger) {
 
 	dropAllTables(db)
 	migrate(db)
-	populateTestData(db)
+	// populateTestData(db)
 }
 
 func GetDatabase(logger ilog.StdLogger) *gorm.DB {
@@ -46,8 +45,8 @@ func makeConnectionString(config config.Config) string {
 }
 
 func dropAllTables(db *gorm.DB) {
-	// db.DropTableIfExists(&entities.Person{})
-	db.DropTableIfExists(&auth.User{})
+	db.DropTableIfExists(&entities.Account{})
+	db.DropTableIfExists(&entities.User{})
 	db.DropTableIfExists(&entities.Project{})
 	db.DropTableIfExists(&entities.Story{})
 	db.DropTableIfExists(&entities.Task{})
@@ -56,8 +55,8 @@ func dropAllTables(db *gorm.DB) {
 }
 
 func migrate(db *gorm.DB) {
-	// db.AutoMigrate(&entities.Person{})
-	db.AutoMigrate(&auth.User{})
+	db.AutoMigrate(&entities.Account{})
+	db.AutoMigrate(&entities.User{})
 	db.AutoMigrate(&entities.Project{})
 	db.AutoMigrate(&entities.Story{})
 	db.AutoMigrate(&entities.Task{})

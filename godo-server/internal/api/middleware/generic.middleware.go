@@ -15,7 +15,7 @@ func NewGenericMiddleware(logger ilog.StdLogger) GenericMiddleware {
 
 func (m *GenericMiddleware) LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		m.log.Infof("%v: %v", r.Method, r.RequestURI)
+		m.log.Debugf("%v: %v", r.Method, r.RequestURI)
 		next.ServeHTTP(w, r)
 	})
 }

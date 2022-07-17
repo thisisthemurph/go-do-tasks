@@ -44,6 +44,7 @@ func main() {
 
 type ServicesCollection struct {
 	authService    services.AuthService
+	accountService services.AccountService
 	userService    services.UserService
 	projectService services.ProjectService
 	storyService   services.StoryService
@@ -51,6 +52,7 @@ type ServicesCollection struct {
 
 type MiddlewareCollection struct {
 	Generic middleware.GenericMiddleware
+	Account middleware.AccountMiddleware
 	Auth    middleware.AuthMiddleware
 	Project middleware.ProjectMiddleware
 }
@@ -58,6 +60,8 @@ type MiddlewareCollection struct {
 func buildServices(dao repository.DAO, config config.Config) ServicesCollection {
 	// Make loggers with the specific required parameters
 	authServiceLogger := makeLoggerWithTag("AuthService")
+	accountServiceLogger := makeLoggerWithTag("AccountService")
+	accountQueryLogger := makeLoggerWithTag("AccountQuery")
 	userServiceLogger := makeLoggerWithTag("UserService")
 	userQueryLogger := makeLoggerWithTag("UserQuery")
 	projectServiceLogger := makeLoggerWithTag("ProjectService")
@@ -66,18 +70,21 @@ func buildServices(dao repository.DAO, config config.Config) ServicesCollection 
 	storyQueryLogger := makeLoggerWithTag("StoryRepo")
 
 	// Initialize the repositories
+	accountQuery := dao.NewAccountQuery(accountQueryLogger)
 	userQuery := dao.NewApiUserQuery(userQueryLogger)
 	projectQuery := dao.NewProjectQuery(projectQueryLogger)
 	storyQuery := dao.NewStoryQuery(storyQueryLogger)
 
 	// Initialize the services
 	authService := services.NewAuthService(userQuery, []byte(config.JWTKey), authServiceLogger)
+	accountService := services.NewAccountService(accountQuery, accountServiceLogger)
 	userService := services.NewUserService(userQuery, userServiceLogger)
 	projectService := services.NewProjectService(projectQuery, projectServiceLogger)
 	storyService := services.NewStoryService(storyQuery, storyServiceLogger)
 
 	return ServicesCollection{
 		authService,
+		accountService,
 		userService,
 		projectService,
 		storyService,
@@ -87,6 +94,7 @@ func buildServices(dao repository.DAO, config config.Config) ServicesCollection 
 func buildMiddleware(logger ilog.StdLogger, services ServicesCollection) MiddlewareCollection {
 	return MiddlewareCollection{
 		Generic: middleware.NewGenericMiddleware(logger),
+		Account: middleware.NewAccountMiddleware(logger),
 		Auth:    middleware.NewAuthMiddleware(logger, services.authService, services.userService),
 		Project: middleware.NewProjectMiddleware(logger),
 	}
@@ -100,17 +108,32 @@ func buildRouter(services ServicesCollection, logger logrus.FieldLogger) *mux.Ro
 	router := r.PathPrefix("/api").Subrouter()
 	router.Use(middlewares.Generic.LoggingMiddleware)
 
+	configureAccountRouter(router, services, middlewares)
 	configureUserAuthRouter(router, services)
 	configureProjectRouter(router, services, middlewares)
 
 	return r
 }
 
+func configureAccountRouter(router *mux.Router, services ServicesCollection, middlewares MiddlewareCollection) {
+	accountHandlerLogger := makeLoggerWithTag("AccountHandler")
+	accountHandler := handler.NewAccountsHandler(
+		accountHandlerLogger,
+		services.accountService,
+		services.userService,
+	)
+
+	accountPostRouter := router.Methods(http.MethodPost).Subrouter()
+	accountPostRouter.HandleFunc("/account", accountHandler.CreateAccount)
+	accountPostRouter.Use(middlewares.Account.ValidateNewAccountDtoMiddleware)
+}
+
 func configureUserAuthRouter(router *mux.Router, services ServicesCollection) {
-	userHandlerLogger := makeLoggerWithTag("userHandler")
+	userHandlerLogger := makeLoggerWithTag("UserHandler")
 	userHandler := handler.NewUsersHandler(
 		userHandlerLogger,
 		services.authService,
+		services.accountService,
 		services.userService,
 	)
 
@@ -121,8 +144,8 @@ func configureUserAuthRouter(router *mux.Router, services ServicesCollection) {
 
 func configureProjectRouter(router *mux.Router, services ServicesCollection, middlewares MiddlewareCollection) {
 	projectLogger := makeLoggerWithTag("ProjectHandler")
-
 	projectHandler := handler.NewProjectsHandler(projectLogger, services.projectService)
+
 	projectGetRouter := router.Methods(http.MethodGet).Subrouter()
 	projectGetRouter.HandleFunc("/project", projectHandler.GetAllProjects)
 	projectGetRouter.HandleFunc("/project/{id:[a-f0-9-]+}", projectHandler.GetProjectById)

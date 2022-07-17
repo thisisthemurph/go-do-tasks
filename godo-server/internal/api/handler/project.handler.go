@@ -4,7 +4,6 @@ import (
 	"godo/internal/api"
 	"godo/internal/api/dto"
 	"godo/internal/api/services"
-	"godo/internal/auth"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 	"net/http"
@@ -60,8 +59,8 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var projectDto dto.NewProjectDto
 	projectDto = r.Context().Value(entities.ProjectKey{}).(dto.NewProjectDto)
 
-	var user auth.User
-	user = r.Context().Value(auth.UserKey{}).(auth.User)
+	var user entities.User
+	user = r.Context().Value(entities.UserKey{}).(entities.User)
 
 	// TODO: Validate the DTO
 

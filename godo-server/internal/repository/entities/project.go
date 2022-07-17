@@ -3,7 +3,6 @@ package entities
 import (
 	"encoding/json"
 	"fmt"
-	"godo/internal/auth"
 	"io"
 	"log"
 	"net/http"
@@ -14,11 +13,11 @@ import (
 type Project struct {
 	Base
 
-	Name        string    `json:"name" validate:"required,min=1,max=40"`
-	Description string    `json:"description" validate:"max=280"`
-	CreatorId   string    `json:"-"`
-	Creator     auth.User `json:"creator" gorm:"foreignKey:CreatorId"`
-	Stories     []Story   `json:"stories"`
+	Name        string  `json:"name" validate:"required,min=1,max=40"`
+	Description string  `json:"description" validate:"max=280"`
+	CreatorId   string  `json:"-"`
+	Creator     User    `json:"creator" gorm:"foreignKey:CreatorId"`
+	Stories     []Story `json:"stories"`
 
 	TimestampBase
 }

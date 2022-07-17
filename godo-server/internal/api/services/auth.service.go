@@ -11,7 +11,7 @@ import (
 )
 
 type AuthService interface {
-	GenerateJWT(email string, username string) (string, error)
+	GenerateJWT(email string, username string, accountId string) (string, error)
 	ValidateTokenClaims(signedToken string) (err error)
 	GetClaims(signedToken string) (*JWTClaim, error)
 	BearerTokenToToken(token string) (string, error)
@@ -32,17 +32,19 @@ func NewAuthService(apiUserQuery repository.ApiUserQuery, jwtSecret []byte, logg
 }
 
 type JWTClaim struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	AccountId string `json:"account_id"`
 	jwt.StandardClaims
 }
 
-func (s *authService) GenerateJWT(email string, username string) (token string, err error) {
+func (s *authService) GenerateJWT(email string, username string, accountId string) (token string, err error) {
 	expirationTime := time.Now().Add(6 * time.Hour)
 
 	claims := JWTClaim{
-		Email:    email,
-		Username: username,
+		Email:     email,
+		Username:  username,
+		AccountId: accountId,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},

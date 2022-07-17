@@ -7,9 +7,10 @@ import (
 )
 
 type DAO interface {
+	NewAccountQuery(logger ilog.StdLogger) AccountQuery
+	NewApiUserQuery(logger ilog.StdLogger) ApiUserQuery
 	NewStoryQuery(logger ilog.StdLogger) StoryQuery
 	NewProjectQuery(logger ilog.StdLogger) ProjectQuery
-	NewApiUserQuery(logger ilog.StdLogger) ApiUserQuery
 }
 
 type dao struct {
