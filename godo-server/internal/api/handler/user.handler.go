@@ -30,8 +30,6 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-var userAuthenticationError string = "A user with the given username and password combination could not be found"
-
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	var request LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&request)

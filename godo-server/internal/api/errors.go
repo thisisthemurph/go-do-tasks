@@ -7,3 +7,4 @@ var ProjectNotCreatedError = errors.New("The project could not be created")
 
 var UserNotFoundError = errors.New("A user with the specified email address could not be found")
 var UserAlreadyExistsError = errors.New("A username with the given email address already exists")
+var userAuthenticationError string = "A user with the given email and password combination could not be found"

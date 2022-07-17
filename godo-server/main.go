@@ -8,6 +8,7 @@ import (
 	"godo/internal/api/middleware"
 	"godo/internal/api/services"
 	"godo/internal/config"
+	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 
 	"github.com/gorilla/mux"
@@ -27,8 +28,7 @@ func main() {
 
 	dao := repository.NewDAO(daoLogger)
 	servicesCollection := buildServices(dao, config)
-	handlers := buildHandlers(servicesCollection, logger)
-	router := buildRouter(servicesCollection, handlers, logger)
+	router := buildRouter(servicesCollection, logger)
 
 	srv := &http.Server{
 		Addr:         "0.0.0.0:" + config.ApiPort,
@@ -47,6 +47,12 @@ type ServicesCollection struct {
 	userService    services.UserService
 	projectService services.ProjectService
 	storyService   services.StoryService
+}
+
+type MiddlewareCollection struct {
+	Generic middleware.GenericMiddleware
+	Auth    middleware.AuthMiddleware
+	Project middleware.ProjectMiddleware
 }
 
 func buildServices(dao repository.DAO, config config.Config) ServicesCollection {
@@ -78,41 +84,29 @@ func buildServices(dao repository.DAO, config config.Config) ServicesCollection 
 	}
 }
 
-func buildHandlers(collection ServicesCollection, logger logrus.FieldLogger) handler.IHandler {
-	handlerLogger := makeLoggerWithTag("Handler")
-
-	return handler.MakeHandlers(
-		handlerLogger,
-		&collection.projectService,
-		&collection.storyService,
-		&collection.authService,
-		&collection.userService,
-	)
+func buildMiddleware(logger ilog.StdLogger, services ServicesCollection) MiddlewareCollection {
+	return MiddlewareCollection{
+		Generic: middleware.NewGenericMiddleware(logger),
+		Auth:    middleware.NewAuthMiddleware(logger, services.authService, services.userService),
+		Project: middleware.NewProjectMiddleware(logger),
+	}
 }
 
-func buildRouter(services ServicesCollection, handlers handler.IHandler, logger logrus.FieldLogger) *mux.Router {
+func buildRouter(services ServicesCollection, logger logrus.FieldLogger) *mux.Router {
 	middlewareLogger := makeLoggerWithTag("Middleware")
-	projectLogger := makeLoggerWithTag("ProjectHandler")
-
-	am := middleware.NewAuthMiddleware(middlewareLogger, services.authService, services.userService)
-	gm := middleware.NewGenericMiddleware(middlewareLogger)
-	pm := middleware.NewProjectMiddleware(middlewareLogger)
+	middlewares := buildMiddleware(middlewareLogger, services)
 
 	r := mux.NewRouter()
 	router := r.PathPrefix("/api").Subrouter()
-	router.Use(gm.LoggingMiddleware)
+	router.Use(middlewares.Generic.LoggingMiddleware)
 
-	projectHandler := handler.NewProjectsHandler(projectLogger, services.projectService)
-	projectGetRouter := router.Methods(http.MethodGet).Subrouter()
-	projectGetRouter.HandleFunc("/project", projectHandler.GetAllProjects)
-	projectGetRouter.HandleFunc("/project/{id:[a-f0-9-]+}", projectHandler.GetProjectById)
-	projectGetRouter.Use(am.AuthenticateRequestMiddleware)
+	configureUserAuthRouter(router, services)
+	configureProjectRouter(router, services, middlewares)
 
-	projectPostRouter := router.Methods(http.MethodPost).Subrouter()
-	projectPostRouter.HandleFunc("/project", projectHandler.CreateProject)
-	projectPostRouter.Use(am.AuthenticateRequestMiddleware)
-	projectPostRouter.Use(pm.ValidateNewProjectDtoMiddleware)
+	return r
+}
 
+func configureUserAuthRouter(router *mux.Router, services ServicesCollection) {
 	userHandlerLogger := makeLoggerWithTag("userHandler")
 	userHandler := handler.NewUsersHandler(
 		userHandlerLogger,
@@ -123,8 +117,21 @@ func buildRouter(services ServicesCollection, handlers handler.IHandler, logger 
 	userAuthRouter := router.Methods(http.MethodPost).Subrouter()
 	userAuthRouter.HandleFunc("/auth/login", userHandler.Login)
 	userAuthRouter.HandleFunc("/auth/register", userHandler.Register)
+}
 
-	return r
+func configureProjectRouter(router *mux.Router, services ServicesCollection, middlewares MiddlewareCollection) {
+	projectLogger := makeLoggerWithTag("ProjectHandler")
+
+	projectHandler := handler.NewProjectsHandler(projectLogger, services.projectService)
+	projectGetRouter := router.Methods(http.MethodGet).Subrouter()
+	projectGetRouter.HandleFunc("/project", projectHandler.GetAllProjects)
+	projectGetRouter.HandleFunc("/project/{id:[a-f0-9-]+}", projectHandler.GetProjectById)
+	projectGetRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+
+	projectPostRouter := router.Methods(http.MethodPost).Subrouter()
+	projectPostRouter.HandleFunc("/project", projectHandler.CreateProject)
+	projectPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+	projectPostRouter.Use(middlewares.Project.ValidateNewProjectDtoMiddleware)
 }
 
 func makeLogger() *logrus.Logger {
