@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"godo/internal/api/httperror"
 	"godo/internal/api/services"
 	"godo/internal/auth"
 	"godo/internal/helper/ilog"
@@ -45,12 +45,10 @@ func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.
 		err = tr.Validate()
 		if err != nil {
 			m.log.Errorf("The TokenRequest failed validation: %s", err)
-			e := httperror.New(
-				http.StatusBadRequest,
-				fmt.Sprintf("Error validating TokenRequest: %s", err),
-			)
 
-			http.Error(w, e.AsJson(), e.GetStatusCode())
+			e := errors.New(fmt.Sprintf("Error validating TokenRequest: %s", err))
+
+			http.Error(w, e.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -73,6 +71,7 @@ func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.H
 		token, err := m.authService.BearerTokenToToken(tokenValue)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
 		}
 
 		// Validate the auth token
@@ -94,6 +93,13 @@ func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.H
 		user, err := m.userService.GetUserByEmailAddress(claims.Email)
 		if err != nil {
 			m.log.Error("Could not determine user with email address %s from signed token", claims.Email)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Verify the user's JWT account_id is the same as in the database
+		if user.AccountId != claims.AccountId {
+			m.log.Warnf("The user account in the token claims is incorrect. Expected %s but got %s", user.AccountId, claims.AccountId)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
