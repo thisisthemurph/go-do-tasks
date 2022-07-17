@@ -8,7 +8,7 @@ import (
 
 type ProjectQuery interface {
 	GetProjectById(storyId string) (*entities.Project, error)
-	GetAllProjects() ([]*entities.Project, error)
+	GetAllProjects(accountId string) ([]*entities.Project, error)
 	CreateProject(newProject *entities.Project) error
 	UpdateProject(projectId string, newProject *entities.Project) error
 	DeleteProject(projectId string) error
@@ -23,14 +23,21 @@ func (d *dao) NewProjectQuery(logger ilog.StdLogger) ProjectQuery {
 	return &projectQuery{log: logger}
 }
 
-func (q *projectQuery) GetAllProjects() ([]*entities.Project, error) {
+func (q *projectQuery) GetAllProjects(accountId string) ([]*entities.Project, error) {
 	q.log.Info("Fetching all project")
 
 	projects := []*entities.Project{}
-	err := Database.Find(&projects).Error
-	ilog.ErrorlnIf(err, q.log)
+	// err := Database.
+	// 	Find(&projects).
+	// 	Joins("left join users on projects.").
+	// 	Error
 
-	return projects, err
+	result := Database.Joins("Creator", Database.Where(&entities.User{AccountId: accountId})).
+		Find(&projects)
+
+	ilog.ErrorlnIf(result.Error, q.log)
+
+	return projects, result.Error
 }
 
 func (q *projectQuery) GetProjectById(projectId string) (*entities.Project, error) {

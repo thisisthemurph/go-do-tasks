@@ -9,7 +9,7 @@ import (
 )
 
 type ProjectService interface {
-	GetProjects() ([]*entities.Project, error)
+	GetProjects(accountId string) ([]*entities.Project, error)
 	GetProjectById(userId string) (*entities.Project, error)
 	CreateProject(newProject *entities.Project) error
 	UpdateProject(projectId string, newProjectData *entities.Project) error
@@ -28,8 +28,8 @@ func NewProjectService(projectQuery repository.ProjectQuery, logger ilog.StdLogg
 	}
 }
 
-func (p *projectService) GetProjects() ([]*entities.Project, error) {
-	projects, err := p.query.GetAllProjects()
+func (p *projectService) GetProjects(accountId string) ([]*entities.Project, error) {
+	projects, err := p.query.GetAllProjects(accountId)
 
 	if err != nil {
 		p.log.Warn("Error fetching projects from the database")

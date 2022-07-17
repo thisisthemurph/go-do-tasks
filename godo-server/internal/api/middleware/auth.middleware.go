@@ -47,7 +47,6 @@ func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.
 			m.log.Errorf("The TokenRequest failed validation: %s", err)
 
 			e := errors.New(fmt.Sprintf("Error validating TokenRequest: %s", err))
-
 			http.Error(w, e.Error(), http.StatusBadRequest)
 			return
 		}
@@ -106,7 +105,7 @@ func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.H
 
 		// Attach the user to the context
 		m.log.Info("Adding user to context ", user)
-		ctx := context.WithValue(r.Context(), entities.UserKey{}, user)
+		ctx := context.WithValue(r.Context(), entities.UserKey{}, *user)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

@@ -20,6 +20,20 @@ func NewProjectsHandler(logger ilog.StdLogger, projectService services.ProjectSe
 	return Projects{log: logger, projectService: projectService}
 }
 
+func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
+	user := entities.User{}
+	user = r.Context().Value(entities.UserKey{}).(entities.User)
+
+	projects, err := p.projectService.GetProjects(user.AccountId)
+
+	if err != nil {
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond(projects, http.StatusOK, w)
+}
+
 func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	projectId, paramIdExists := getParamFomRequest(r, "id")
 	if !paramIdExists {
@@ -44,43 +58,42 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	api.Respond(result, http.StatusOK, w)
 }
 
-func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
-	projects, err := p.projectService.GetProjects()
+func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
+	var user entities.User
+	var projectDto dto.NewProjectDto
+
+	ctx := r.Context()
+	projectDto = ctx.Value(entities.ProjectKey{}).(dto.NewProjectDto)
+	user = ctx.Value(entities.UserKey{}).(entities.User)
+
+	// Validate the project looks OK
+	err := projectDto.Validate()
 	if err != nil {
-		api.ReturnError(err, http.StatusInternalServerError, w)
+		p.log.Debug(err)
+		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
 
-	result, _ := dataToJson(projects)
-	api.Respond(result, http.StatusOK, w)
-}
-
-func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
-	var projectDto dto.NewProjectDto
-	projectDto = r.Context().Value(entities.ProjectKey{}).(dto.NewProjectDto)
-
-	var user entities.User
-	user = r.Context().Value(entities.UserKey{}).(entities.User)
-
-	// TODO: Validate the DTO
-
+	// Create the project
 	project := entities.Project{
 		Name:        projectDto.Name,
 		Description: projectDto.Description,
 		Creator:     user,
 	}
 
-	err := p.projectService.CreateProject(&project)
+	err = p.projectService.CreateProject(&project)
 	switch err {
 	case nil:
 		break
 	case api.ProjectNotCreatedError:
 		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
 	}
 
-	result, _ := dataToJson(project)
-	api.Respond(result, http.StatusOK, w)
+	api.Respond(project, http.StatusOK, w)
 }
 
 func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
