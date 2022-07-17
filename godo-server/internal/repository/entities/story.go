@@ -2,7 +2,6 @@ package entities
 
 import (
 	"fmt"
-	"godo/internal/auth"
 
 	"github.com/go-playground/validator"
 )
@@ -10,12 +9,12 @@ import (
 type Story struct {
 	Base
 
-	ProjectId   string    `json:"project_id"`
-	Project     Project   `json:"-"`
-	Name        string    `json:"name" validate:"required,min=1,max=40"`
-	Description string    `json:"description" validate:"max=280"`
-	CreatorId   string    `json:"-"`
-	Creator     auth.User `json:"creator" gorm:"foreignKey:CreatorId"`
+	ProjectId   string  `json:"project_id"`
+	Project     Project `json:"-"`
+	Name        string  `json:"name" validate:"required,min=1,max=40"`
+	Description string  `json:"description" validate:"max=280"`
+	CreatorId   string  `json:"-"`
+	Creator     User    `json:"creator" gorm:"foreignKey:CreatorId"`
 	Tasks       []Task
 
 	TimestampBase

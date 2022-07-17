@@ -4,7 +4,6 @@ import (
 	"godo/internal/api"
 	"godo/internal/api/dto"
 	"godo/internal/api/services"
-	"godo/internal/auth"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 	"net/http"
@@ -34,10 +33,10 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		break
 	case api.ProjectNotFoundError:
-		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		api.ReturnError(err, http.StatusNotFound, w)
 		return
 	default:
-		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -48,7 +47,7 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 	projects, err := p.projectService.GetProjects()
 	if err != nil {
-		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -60,8 +59,8 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var projectDto dto.NewProjectDto
 	projectDto = r.Context().Value(entities.ProjectKey{}).(dto.NewProjectDto)
 
-	var user auth.User
-	user = r.Context().Value(auth.UserKey{}).(auth.User)
+	var user entities.User
+	user = r.Context().Value(entities.UserKey{}).(entities.User)
 
 	// TODO: Validate the DTO
 
@@ -76,7 +75,7 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		break
 	case api.ProjectNotCreatedError:
-		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -92,7 +91,7 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	err := newProjectData.FromJSON(r.Body)
 	if err != nil {
 		p.log.Error("Could not process Project from request body: ", err)
-		api.ReturnError("Could not process the given project", http.StatusBadRequest, w)
+		api.ReturnError(api.ProjectJsonParseError, http.StatusBadRequest, w)
 		return
 	}
 
@@ -103,10 +102,10 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		break
 	case api.ProjectNotFoundError:
-		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		api.ReturnError(err, http.StatusNotFound, w)
 		return
 	default:
-		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -123,10 +122,10 @@ func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		break
 	case api.ProjectNotFoundError:
-		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		api.ReturnError(err, http.StatusNotFound, w)
 		return
 	default:
-		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 

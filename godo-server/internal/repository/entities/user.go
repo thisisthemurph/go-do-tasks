@@ -1,4 +1,4 @@
-package auth
+package entities
 
 import (
 	"encoding/json"
@@ -19,6 +19,7 @@ type User struct {
 	Discriminator uint32 `json:"discriminator" validate:"required"`
 	Email         string `json:"email" gorm:"unique,index" validate:"required"`
 	Password      string `json:"-" validate:"required"`
+	AccountId     string `json:"-" validate:"required"`
 }
 
 type UserKey struct{}

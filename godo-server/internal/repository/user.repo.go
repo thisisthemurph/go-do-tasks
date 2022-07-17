@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"godo/internal/api"
-	"godo/internal/auth"
 	"godo/internal/helper/ilog"
+	"godo/internal/repository/entities"
 )
 
 type ApiUserQuery interface {
-	CreateUser(user auth.User) (*auth.User, error)
-	GetUserByEmailAddress(email string) (*auth.User, error)
+	CreateUser(user entities.User) (*entities.User, error)
+	GetUserByEmailAddress(email string) (*entities.User, error)
 	UserWithEmailAddressExists(email string) (bool, error)
 }
 
@@ -22,11 +22,11 @@ func (d *dao) NewApiUserQuery(logger ilog.StdLogger) ApiUserQuery {
 	return &apiUserQuery{log: logger}
 }
 
-func (q *apiUserQuery) CreateUser(newUser auth.User) (*auth.User, error) {
+func (q *apiUserQuery) CreateUser(newUser entities.User) (*entities.User, error) {
 	q.log.Info("Registering new user")
 
 	// Check if a user with the username or email already exists
-	var foundUser auth.User
+	var foundUser entities.User
 	result := Database.Where("email = ?", newUser.Email).Find(&foundUser)
 
 	if result.RowsAffected >= 1 {
@@ -58,8 +58,8 @@ func (q *apiUserQuery) CreateUser(newUser auth.User) (*auth.User, error) {
 	return &newUser, err
 }
 
-func (q *apiUserQuery) GetUserByEmailAddress(email string) (*auth.User, error) {
-	var user auth.User
+func (q *apiUserQuery) GetUserByEmailAddress(email string) (*entities.User, error) {
+	var user entities.User
 	err := Database.First(&user, "email = ?", email).Error
 
 	if err != nil {
@@ -75,7 +75,7 @@ func (q *apiUserQuery) UserWithEmailAddressExists(email string) (bool, error) {
 	// _, err := q.GetUserByEmailAddress(email)
 
 	var count int64
-	r := Database.Model(&auth.User{}).
+	r := Database.Model(&entities.User{}).
 		Where("email = ?", email).
 		Count(&count)
 
@@ -91,8 +91,8 @@ func (q *apiUserQuery) GetNextDiscriminator(username string) uint32 {
 
 	err := row.Scan(&result)
 	if err != nil {
-		q.log.Infof("No user with username %s exists. Using discriminator of 1.", username)
 		q.log.Error(err.Error())
+		q.log.Infof("No user with username %s exists. Using discriminator of 1.", username)
 		return 1
 	}
 

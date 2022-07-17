@@ -7,6 +7,7 @@ import (
 	"godo/internal/api/services"
 	"godo/internal/auth"
 	"godo/internal/helper/ilog"
+	"godo/internal/repository/entities"
 	"net/http"
 )
 
@@ -99,7 +100,7 @@ func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.H
 
 		// Attach the user to the context
 		m.log.Info("Adding user to context ", user)
-		ctx := context.WithValue(r.Context(), auth.UserKey{}, user)
+		ctx := context.WithValue(r.Context(), entities.UserKey{}, user)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

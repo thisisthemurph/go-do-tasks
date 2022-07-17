@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"godo/internal/api/httperror"
-	"godo/internal/auth"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 	"net/http"
@@ -20,7 +19,7 @@ func NewUserMiddleware(logger ilog.StdLogger) ProjectMiddleware {
 
 func (m *ProjectMiddleware) ValidateUserMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var user auth.User
+		var user entities.User
 
 		err := user.FromJSON(r.Body)
 		if err != nil {
