@@ -11,7 +11,7 @@ func Respond(i interface{}, status int, w http.ResponseWriter) {
 	ToJSON(i, w)
 }
 
-func ReturnError(message string, status int, w http.ResponseWriter) {
-	httpErr := httperror.New(status, message)
+func ReturnError(message error, status int, w http.ResponseWriter) {
+	httpErr := httperror.New(status, message.Error())
 	Respond(httpErr, status, w)
 }

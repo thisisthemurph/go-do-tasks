@@ -34,7 +34,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	var request LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		api.ReturnError(err.Error(), http.StatusBadRequest, w)
+		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
 
@@ -42,7 +42,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	validate := validator.New()
 	err = validate.Struct(request)
 	if err != nil {
-		api.ReturnError(err.Error(), http.StatusBadRequest, w)
+		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
 
@@ -52,10 +52,10 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		break
 	case api.UserNotFoundError:
-		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		api.ReturnError(api.UserAuthenticationError, http.StatusUnauthorized, w)
 		return
 	default:
-		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -63,14 +63,14 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	err = user.VerifyPassword(request.Password)
 	if err != nil {
 		u.log.Warn("Bad authentication: incorrect password")
-		api.ReturnError(err.Error(), http.StatusUnauthorized, w)
+		api.ReturnError(api.UserAuthenticationError, http.StatusUnauthorized, w)
 		return
 	}
 
 	// Gat a token for the user
 	token, err := u.authService.GenerateJWT(user.Email, user.Username)
 	if err != nil {
-		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -89,7 +89,7 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	var request RegistrationRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		api.ReturnError(err.Error(), http.StatusBadRequest, w)
+		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	validate := validator.New()
 	err = validate.Struct(request)
 	if err != nil {
-		api.ReturnError(err.Error(), http.StatusBadRequest, w)
+		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
 
@@ -116,10 +116,10 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		break
 	case api.UserAlreadyExistsError:
-		api.ReturnError(err.Error(), http.StatusNotFound, w)
+		api.ReturnError(err, http.StatusNotFound, w)
 		return
 	default:
-		api.ReturnError(err.Error(), http.StatusInternalServerError, w)
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
