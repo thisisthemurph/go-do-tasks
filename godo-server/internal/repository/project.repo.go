@@ -27,11 +27,6 @@ func (q *projectQuery) GetAllProjects(accountId string) ([]*entities.Project, er
 	q.log.Info("Fetching all project")
 
 	projects := []*entities.Project{}
-	// err := Database.
-	// 	Find(&projects).
-	// 	Joins("left join users on projects.").
-	// 	Error
-
 	result := Database.Joins("Creator", Database.Where(&entities.User{AccountId: accountId})).
 		Find(&projects)
 
