@@ -26,9 +26,17 @@ func NewAccountService(accountQuery repository.AccountQuery, logger ilog.StdLogg
 }
 
 func (a *accountService) CreateAccount(newAccount *entities.Account) (*entities.Account, error) {
-	account, err := a.query.CreateAccount(newAccount)
+	// Check if the account already exists
+	exists, err := a.AccountWithEmailAddressExists(newAccount.Email)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO: Check if the account already exists
+	if exists {
+		return nil, api.AccountAlreadyExistsError
+	}
+
+	account, err := a.query.CreateAccount(newAccount)
 
 	if err != nil {
 		a.log.Error("Issue creating Account: ", err)

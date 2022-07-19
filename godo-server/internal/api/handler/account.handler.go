@@ -31,9 +31,31 @@ func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	var accountDto dto.NewAccountDto
 	accountDto = r.Context().Value(entities.AccountKey{}).(dto.NewAccountDto)
 
-	// TODO: Check if the account already exists
-	// TODO: Check if the user already exists
+	// Check that the account/user does not already existing
+	// Neither shall be created whilst the other exists
+	accountExists, err := a.accountService.AccountWithEmailAddressExists(accountDto.UserEmail)
+	if err != nil {
+		a.log.Error("Issue checking if account exists: ", err)
+		api.ReturnError(api.AccountNotCreatedError, http.StatusInternalServerError, w)
+		return
+	}
 
+	userExists, err := a.userService.UserWithEmailAddressExists(accountDto.UserEmail)
+	if err != nil {
+		a.log.Error("Issue checking if user exists: ", err)
+		api.ReturnError(api.AccountNotCreatedError, http.StatusInternalServerError, w)
+		return
+	}
+
+	if accountExists {
+		api.ReturnError(api.AccountAlreadyExistsError, http.StatusBadRequest, w)
+		return
+	} else if userExists {
+		api.ReturnError(api.UserAlreadyExistsError, http.StatusFound, w)
+		return
+	}
+
+	// Create the account
 	newAccount := entities.Account{
 		Name:  accountDto.Name,
 		Email: accountDto.UserEmail,
@@ -45,6 +67,7 @@ func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create the user
 	newUser := entities.User{
 		Name:      accountDto.UserName,
 		Email:     accountDto.UserEmail,
@@ -54,16 +77,11 @@ func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = a.userService.CreateUser(newUser)
-	switch err {
-	case nil:
-		break
-	case api.UserAlreadyExistsError:
-		api.ReturnError(err, http.StatusFound, w)
-		return
-	default:
+	if err != nil {
 		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
-	api.Respond(createdAccount, http.StatusOK, w)
+	// TODO: Create a RespondWithPointer method to point to the newly created resource
+	api.Respond(createdAccount, http.StatusCreated, w)
 }

@@ -40,10 +40,6 @@ func (s *userService) GetUserByEmailAddress(email string) (*entities.User, error
 	return user, err
 }
 
-func (s *userService) UserWithEmailAddressExists(email string) (bool, error) {
-	return s.query.UserWithEmailAddressExists(email)
-}
-
 func (s *userService) CreateUser(newUser entities.User) (*entities.User, error) {
 	exists, err := s.query.UserWithEmailAddressExists(newUser.Email)
 	if err != nil {
@@ -55,4 +51,8 @@ func (s *userService) CreateUser(newUser entities.User) (*entities.User, error) 
 	}
 
 	return s.query.CreateUser(newUser)
+}
+
+func (s *userService) UserWithEmailAddressExists(email string) (bool, error) {
+	return s.query.UserWithEmailAddressExists(email)
 }
