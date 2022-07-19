@@ -7,9 +7,9 @@ import (
 )
 
 type ProjectQuery interface {
-	GetProjectById(storyId string) (*entities.Project, error)
+	GetProjectById(accountId string, storyId string) (*entities.Project, error)
 	GetAllProjects(accountId string) ([]*entities.Project, error)
-	CreateProject(newProject *entities.Project) error
+	CreateProject(newProject *entities.Project) (*entities.Project, error)
 	UpdateProject(projectId string, newProject *entities.Project) error
 	DeleteProject(projectId string) error
 	Exists(projectId string) bool
@@ -24,38 +24,44 @@ func (d *dao) NewProjectQuery(logger ilog.StdLogger) ProjectQuery {
 }
 
 func (q *projectQuery) GetAllProjects(accountId string) ([]*entities.Project, error) {
-	q.log.Info("Fetching all project")
+	q.log.Infof("Fetching all project with accountId %s", accountId)
 
 	projects := []*entities.Project{}
-	result := Database.Joins("Creator", Database.Where(&entities.User{AccountId: accountId})).
+	result := Database.
+		Preload("Creator", "account_id = ?", accountId).
+		Joins("JOIN users on projects.creator_id = users.id").
+		Where("users.account_id = ?", accountId).
 		Find(&projects)
 
 	ilog.ErrorlnIf(result.Error, q.log)
-
 	return projects, result.Error
 }
 
-func (q *projectQuery) GetProjectById(projectId string) (*entities.Project, error) {
-	q.log.Infof("Fetching project with ID %v", projectId)
+func (q *projectQuery) GetProjectById(projectId string, accountId string) (*entities.Project, error) {
+	q.log.Infof("Fetching project with projectId %s and accountId %s", projectId, accountId)
 
 	project := entities.Project{}
-	err := Database.First(&project, "id = ?", projectId).Error
-	ilog.ErrorlnIf(err, q.log)
+	result := Database.
+		Preload("Creator", "account_id = ?", accountId).
+		Joins("JOIN users on projects.creator_id = users.id").
+		Where("users.account_id = ?", accountId).
+		First(&project, "projects.id = ?", projectId)
 
-	return &project, err
+	ilog.ErrorlnIf(result.Error, q.log)
+	return &project, result.Error
 }
 
-func (q *projectQuery) CreateProject(newProject *entities.Project) error {
+func (q *projectQuery) CreateProject(newProject *entities.Project) (*entities.Project, error) {
 	q.log.Infof("Creating Project with name %v", newProject.Name)
 
-	err := Database.Create(&newProject).Error
-	ilog.ErrorlnIf(err, q.log)
+	response := Database.Create(&newProject)
+	ilog.ErrorlnIf(response.Error, q.log)
 
-	return err
+	return newProject, response.Error
 }
 
 func (q *projectQuery) UpdateProject(projectId string, newProject *entities.Project) error {
-	project, _ := q.GetProjectById(projectId)
+	project, _ := q.getProjectByIdOnly(projectId)
 
 	err := Database.First(&project, "id = ?", projectId).Error
 	if err != nil {
@@ -89,4 +95,14 @@ func (q *projectQuery) Exists(projectId string) bool {
 	q.log.Println(r.RowsAffected)
 
 	return r.RowsAffected == 1
+}
+
+func (q *projectQuery) getProjectByIdOnly(projectId string) (*entities.Project, error) {
+	q.log.Infof("Fetching project with projectId %s", projectId)
+
+	project := entities.Project{}
+	result := Database.First(&project, "id = ?", projectId)
+
+	ilog.ErrorlnIf(result.Error, q.log)
+	return &project, result.Error
 }

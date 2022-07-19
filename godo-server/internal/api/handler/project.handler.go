@@ -7,8 +7,6 @@ import (
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 type Projects struct {
@@ -35,13 +33,15 @@ func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromContext(r.Context())
+
 	projectId, paramIdExists := getParamFomRequest(r, "id")
 	if !paramIdExists {
 		http.Error(w, "The ID of the Project must be specified", http.StatusBadRequest)
 		return
 	}
 
-	project, err := p.projectService.GetProjectById(projectId)
+	project, err := p.projectService.GetProjectById(projectId, user.AccountId)
 
 	switch err {
 	case nil:
@@ -54,8 +54,7 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, _ := dataToJson(*project)
-	api.Respond(result, http.StatusOK, w)
+	api.Respond(project, http.StatusOK, w)
 }
 
 func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +63,8 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	projectDto = ctx.Value(entities.ProjectKey{}).(dto.NewProjectDto)
-	user = ctx.Value(entities.UserKey{}).(entities.User)
+	// user = ctx.Value(entities.UserKey{}).(entities.User)
+	user = getUserFromContext(ctx)
 
 	// Validate the project looks OK
 	err := projectDto.Validate()
@@ -74,14 +74,14 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create the project
-	project := entities.Project{
+	// Create the newProject
+	newProject := entities.Project{
 		Name:        projectDto.Name,
 		Description: projectDto.Description,
 		Creator:     user,
 	}
 
-	err = p.projectService.CreateProject(&project)
+	createdProject, err := p.projectService.CreateProject(&newProject)
 	switch err {
 	case nil:
 		break
@@ -93,7 +93,7 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Respond(project, http.StatusOK, w)
+	api.Respond(createdProject, http.StatusOK, w)
 }
 
 func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +122,7 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Respond("", http.StatusOK, w)
+	api.Respond("", http.StatusNoContent, w)
 }
 
 func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
@@ -142,11 +142,5 @@ func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Respond("", http.StatusOK, w)
-}
-
-func getParamFomRequest(r *http.Request, param string) (string, bool) {
-	params := mux.Vars(r)
-	paramValue, paramExists := params[param]
-	return paramValue, paramExists
+	api.Respond("", http.StatusNoContent, w)
 }
