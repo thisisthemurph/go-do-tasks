@@ -58,16 +58,23 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
-	var user entities.User
+
 	var projectDto dto.NewProjectDto
 
+	// projectDto = ctx.Value(entities.ProjectKey{}).(dto.NewProjectDto)
+	err := decodeJSONBody(w, r, &projectDto)
+	if err != nil {
+		handleMalformedJSONError(w, err)
+		return
+	}
+
 	ctx := r.Context()
-	projectDto = ctx.Value(entities.ProjectKey{}).(dto.NewProjectDto)
-	// user = ctx.Value(entities.UserKey{}).(entities.User)
+
+	var user entities.User
 	user = getUserFromContext(ctx)
 
 	// Validate the project looks OK
-	err := projectDto.Validate()
+	err = projectDto.Validate()
 	if err != nil {
 		p.log.Debug(err)
 		api.ReturnError(err, http.StatusBadRequest, w)
@@ -93,7 +100,7 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Respond(createdProject, http.StatusOK, w)
+	api.Respond(createdProject, http.StatusCreated, w)
 }
 
 func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
