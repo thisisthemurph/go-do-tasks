@@ -43,7 +43,9 @@ func (q *projectQuery) GetProjectById(projectId string, accountId string) (*enti
 	project := entities.Project{}
 	result := Database.
 		Preload("Creator", "account_id = ?", accountId).
+		Preload("Stories", "project_id = ?", projectId).
 		Joins("JOIN users on projects.creator_id = users.id").
+		Joins("JOIN stories on projects.id = stories.project_id").
 		Where("users.account_id = ?", accountId).
 		First(&project, "projects.id = ?", projectId)
 
