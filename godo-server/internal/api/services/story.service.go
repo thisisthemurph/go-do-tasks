@@ -1,14 +1,17 @@
 package services
 
 import (
+	"errors"
+	"godo/internal/api"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
 )
 
 type StoryService interface {
-	GetStories() ([]*entities.Story, error)
-	GetStoryById(userId string) (*entities.Story, error)
+	GetStories(accountId string) ([]*entities.Story, error)
+	GetStoryById(accountId, userId string) (*entities.Story, error)
+	CreateStory(newStory *entities.Story) (*entities.Story, error)
 }
 
 type storyService struct {
@@ -23,12 +26,33 @@ func NewStoryService(storyQuery repository.StoryQuery, log ilog.StdLogger) Story
 	}
 }
 
-func (s *storyService) GetStories() ([]*entities.Story, error) {
-	stories, err := s.query.GetAllStories()
-	return stories, err
+func (s *storyService) GetStories(accountId string) ([]*entities.Story, error) {
+	stories, err := s.query.GetAllStories(accountId)
+	if err != nil {
+		s.log.Infof("Error fetching stories from database: ", err.Error())
+		return nil, errors.New("no stories present in the database")
+	}
+
+	return stories, nil
 }
 
-func (s *storyService) GetStoryById(userId string) (*entities.Story, error) {
-	story, err := s.query.GetStoryById(userId)
+func (s *storyService) GetStoryById(accountId, storyId string) (*entities.Story, error) {
+	story, err := s.query.GetStoryById(accountId, storyId)
+	if err != nil {
+		s.log.Infof("Story with accountId %s and storyId %s not found", accountId, storyId)
+		return nil, api.ErrorStoryNotFound
+	}
+
 	return story, err
+}
+
+func (s *storyService) CreateStory(newStory *entities.Story) (*entities.Story, error) {
+	createdStory, err := s.query.CreateStory(newStory)
+
+	if err != nil {
+		s.log.Info("Error creating Story.", err)
+		return nil, api.ErrorStoryNotCreated
+	}
+
+	return createdStory, nil
 }

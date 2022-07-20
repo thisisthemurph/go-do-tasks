@@ -33,14 +33,14 @@ func (a *accountService) CreateAccount(newAccount *entities.Account) (*entities.
 	}
 
 	if exists {
-		return nil, api.AccountAlreadyExistsError
+		return nil, api.ErrorAccountAlreadyExists
 	}
 
 	account, err := a.query.CreateAccount(newAccount)
 
 	if err != nil {
 		a.log.Error("Issue creating Account: ", err)
-		return nil, api.AccountNotCreatedError
+		return nil, api.ErrorAccountNotCreated
 	}
 
 	return account, nil

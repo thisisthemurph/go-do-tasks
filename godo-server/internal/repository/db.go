@@ -10,11 +10,11 @@ import (
 )
 
 func CreateAndPopulateDatabase(logger ilog.StdLogger) {
-	db := connect(logger)
+	// db := connect(logger)
 
-	dropAllTables(db)
-	migrate(db)
-	populateTestData(db)
+	// dropAllTables(db)
+	// migrate(db)
+	// populateTestData(db)
 }
 
 func GetDatabase(logger ilog.StdLogger) *gorm.DB {

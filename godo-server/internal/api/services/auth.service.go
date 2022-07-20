@@ -63,7 +63,7 @@ func (s *authService) ValidateTokenClaims(signedToken string) (err error) {
 
 	if claims.ExpiresAt < time.Now().Local().Unix() {
 		s.log.Info("The token has expired")
-		err = errors.New("Token has expired")
+		return errors.New("token has expired")
 	}
 
 	return nil
@@ -81,13 +81,13 @@ func (s *authService) GetClaims(signedToken string) (*JWTClaim, error) {
 	if err != nil {
 		s.log.Info("There has been an issue processing the claims from the signed token")
 		s.log.Error(err)
-		return nil, errors.New("There has been an issue processing the claims from the signed token")
+		return nil, errors.New("there has been an issue processing the claims from the signed token")
 	}
 
 	claims, ok := token.Claims.(*JWTClaim)
 	if !ok {
 		s.log.Info("Could not parse claims")
-		return nil, errors.New("Could not parse claims")
+		return nil, errors.New("could not parse claims")
 	}
 
 	return claims, nil
@@ -102,7 +102,7 @@ func (s *authService) BearerTokenToToken(token string) (string, error) {
 	tokenParts := strings.SplitAfter(token, " ")
 	if len(tokenParts) != 2 {
 		s.log.Info("The bearer token does not follow the correct format")
-		return "", errors.New("The bearer token does not follow the correct format")
+		return "", errors.New("the bearer token does not follow the correct format")
 	}
 
 	return tokenParts[1], nil
@@ -111,19 +111,19 @@ func (s *authService) BearerTokenToToken(token string) (string, error) {
 func (s *authService) validateTokenString(token string) error {
 	if token == "" {
 		s.log.Info("Token is a blank string")
-		return errors.New("The token is an empty string")
+		return errors.New("the token is an empty string")
 	}
 
 	// Validate that the token string looks alright
 	if !strings.HasPrefix(token, "Bearer") {
 		s.log.Info("Bad token: the token does not start with `Bearer`")
-		return errors.New("Bearer not included at the beginning of the token")
+		return errors.New("bearer not included at the beginning of the token")
 	}
 
 	tokenParts := strings.SplitAfter(token, " ")
 	if len(tokenParts) != 2 {
 		s.log.Info("The bearer token does not follow the correct format")
-		return errors.New("The bearer token does not follow the correct format")
+		return errors.New("the bearer token does not follow the correct format")
 	}
 
 	return nil

@@ -46,7 +46,7 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 		break
-	case api.ProjectNotFoundError:
+	case api.ErrorProjectNotFound:
 		api.ReturnError(err, http.StatusNotFound, w)
 		return
 	default:
@@ -87,7 +87,7 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 		break
-	case api.ProjectNotCreatedError:
+	case api.ErrorProjectNotCreated:
 		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	default:
@@ -106,7 +106,7 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	err := newProjectData.FromJSON(r.Body)
 	if err != nil {
 		p.log.Error("Could not process Project from request body: ", err)
-		api.ReturnError(api.ProjectJsonParseError, http.StatusBadRequest, w)
+		api.ReturnError(api.ErrorProjectJsonParse, http.StatusBadRequest, w)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 		break
-	case api.ProjectNotFoundError:
+	case api.ErrorProjectNotFound:
 		api.ReturnError(err, http.StatusNotFound, w)
 		return
 	default:
@@ -136,7 +136,7 @@ func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 		break
-	case api.ProjectNotFoundError:
+	case api.ErrorProjectNotFound:
 		api.ReturnError(err, http.StatusNotFound, w)
 		return
 	default:
