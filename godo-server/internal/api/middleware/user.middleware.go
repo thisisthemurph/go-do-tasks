@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"godo/internal/api/httperror"
+	"godo/internal/api"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 	"net/http"
@@ -17,7 +17,7 @@ func NewUserMiddleware(logger ilog.StdLogger) ProjectMiddleware {
 	return ProjectMiddleware{log: logger}
 }
 
-func (m *ProjectMiddleware) ValidateUserMiddleware(next http.Handler) http.Handler {
+func (m *UserMiddleware) ValidateUserMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var user entities.User
 
@@ -32,12 +32,9 @@ func (m *ProjectMiddleware) ValidateUserMiddleware(next http.Handler) http.Handl
 		err = user.Validate()
 		if err != nil {
 			m.log.Errorf("The User failed validation: %s", err)
-			e := httperror.New(
-				http.StatusBadRequest,
-				fmt.Sprintf("Error validating project: %s", err),
-			)
 
-			http.Error(w, e.AsJson(), e.GetStatusCode())
+			e := fmt.Errorf("error validating user: %s", err)
+			api.ReturnError(e, http.StatusBadRequest, w)
 			return
 		}
 

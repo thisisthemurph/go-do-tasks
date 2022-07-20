@@ -1,7 +1,6 @@
 package httperror
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,7 +8,6 @@ import (
 
 type HttpError interface {
 	Error() string
-	AsJson() string
 	GetStatusCode() int
 	GetStatusText() string
 }
@@ -32,11 +30,6 @@ func New(status int, message string) HttpError {
 
 func (e *httpError) Error() string {
 	return fmt.Sprintf("Status %d: Err %v", e.StatusCode, e.Err)
-}
-
-func (e *httpError) AsJson() string {
-	bytes, _ := json.Marshal(e)
-	return string(bytes)
 }
 
 func (e *httpError) GetStatusCode() int {

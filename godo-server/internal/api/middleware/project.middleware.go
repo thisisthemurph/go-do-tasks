@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"godo/internal/api"
 	"godo/internal/api/dto"
@@ -33,7 +32,7 @@ func (m *ProjectMiddleware) ValidateNewProjectDtoMiddleware(next http.Handler) h
 		if err != nil {
 			m.log.Errorf("The Project failed validation: %s", err)
 
-			e := errors.New(fmt.Sprintf("Error validating project: %s", err.Error()))
+			e := fmt.Errorf("error validating project: %s", err)
 			api.ReturnError(e, http.StatusBadRequest, w)
 			return
 		}
