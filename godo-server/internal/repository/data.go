@@ -4,32 +4,22 @@ import (
 	"godo/internal/repository/entities"
 )
 
+func userFactory(user *entities.User, accountId string) {
+	user.AccountId = accountId
+}
+
 var (
-	tasks1 = []entities.Task{
-		{
-			Name:        "Database structure design",
-			Description: "Design the structure of the database",
-			Type:        0,
-			Status:      0,
-			// Creator:     user2,
-		},
-		{
-			Name:        "Database implementation",
-			Description: "Implement the actual database in code",
-			Type:        0,
-			Status:      0,
-			// Creator:     user2,
-		},
+	account = entities.Account{
+		Name:  "TestingPalace",
+		Email: "mike@email.com.",
 	}
 
-	tasks2 = []entities.Task{
-		{
-			Name:        "UI/UX Design",
-			Description: "Design the user interface and UX considerations",
-			Type:        0,
-			Status:      0,
-			// Creator:     user1,
-		},
+	user = entities.User{
+		Name:          "Mike",
+		Username:      "mike",
+		Discriminator: 1,
+		Email:         "mike@email.com",
+		Password:      "$2a$14$tJqsjfLC29X9edPbbOoNnuiahW1fWPPz9911TDeg3KdqszShhtpya",
 	}
 
 	project = entities.Project{

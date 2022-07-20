@@ -14,7 +14,7 @@ func CreateAndPopulateDatabase(logger ilog.StdLogger) {
 
 	dropAllTables(db)
 	migrate(db)
-	// populateTestData(db)
+	populateTestData(db)
 }
 
 func GetDatabase(logger ilog.StdLogger) *gorm.DB {
@@ -63,5 +63,11 @@ func migrate(db *gorm.DB) {
 }
 
 func populateTestData(db *gorm.DB) {
+	db.Create(&account)
+
+	user.AccountId = account.ID
+	db.Create(&user)
+
+	project.Creator = user
 	db.Create(&project)
 }
