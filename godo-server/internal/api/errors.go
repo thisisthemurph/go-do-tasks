@@ -21,5 +21,6 @@ var (
 )
 
 var (
-	ErrorStoryNotFound = errors.New("the specified story could not be found")
+	ErrorStoryNotFound   = errors.New("the specified story could not be found")
+	ErrorStoryNotCreated = errors.New("the story could not be created")
 )

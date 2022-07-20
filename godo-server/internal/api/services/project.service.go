@@ -12,6 +12,7 @@ type ProjectService interface {
 	GetProjects(accountId string) ([]*entities.Project, error)
 	GetProjectById(userId, accountId string) (*entities.Project, error)
 	CreateProject(newProject *entities.Project) (*entities.Project, error)
+	Exists(projectId string) bool
 	UpdateProject(projectId string, newProjectData *entities.Project) error
 	DeleteProject(projectId string) error
 }
@@ -59,6 +60,10 @@ func (p *projectService) CreateProject(newProject *entities.Project) (*entities.
 	}
 
 	return createdProject, nil
+}
+
+func (p *projectService) Exists(projectId string) bool {
+	return p.query.Exists(projectId)
 }
 
 func (p *projectService) UpdateProject(projectId string, newProjectData *entities.Project) error {

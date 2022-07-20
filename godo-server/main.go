@@ -111,6 +111,7 @@ func buildRouter(services ServicesCollection, logger logrus.FieldLogger) *mux.Ro
 	configureAccountRouter(router, services, middlewares)
 	configureUserAuthRouter(router, services)
 	configureProjectRouter(router, services, middlewares)
+	configureStoryRouter(router, services, middlewares)
 
 	return r
 }
@@ -155,6 +156,20 @@ func configureProjectRouter(router *mux.Router, services ServicesCollection, mid
 	projectPostRouter.HandleFunc("/project", projectHandler.CreateProject)
 	projectPostRouter.Use(middlewares.Project.ValidateNewProjectDtoMiddleware)
 	projectPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+}
+
+func configureStoryRouter(router *mux.Router, services ServicesCollection, middlewares MiddlewareCollection) {
+	storyLogger := makeLoggerWithTag("StoryHandler")
+	storyHandler := handler.NewStoriesHandler(storyLogger, services.storyService, services.projectService)
+
+	storyGetRouter := router.Methods(http.MethodGet).Subrouter()
+	storyGetRouter.HandleFunc("/stories", storyHandler.GetAllStories)
+	storyGetRouter.HandleFunc("/stories/{id:[a-f0-9-]+}", storyHandler.GetStoryById)
+	storyGetRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+
+	storyPostRouter := router.Methods(http.MethodPost).Subrouter()
+	storyPostRouter.HandleFunc("/stories", storyHandler.CreateStory)
+	storyPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
 }
 
 func makeLogger() *logrus.Logger {

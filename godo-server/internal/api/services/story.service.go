@@ -11,6 +11,7 @@ import (
 type StoryService interface {
 	GetStories(accountId string) ([]*entities.Story, error)
 	GetStoryById(accountId, userId string) (*entities.Story, error)
+	CreateStory(newStory *entities.Story) (*entities.Story, error)
 }
 
 type storyService struct {
@@ -43,4 +44,15 @@ func (s *storyService) GetStoryById(accountId, storyId string) (*entities.Story,
 	}
 
 	return story, err
+}
+
+func (s *storyService) CreateStory(newStory *entities.Story) (*entities.Story, error) {
+	createdStory, err := s.query.CreateStory(newStory)
+
+	if err != nil {
+		s.log.Info("Error creating Story.", err)
+		return nil, api.ErrorStoryNotCreated
+	}
+
+	return createdStory, nil
 }
