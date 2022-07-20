@@ -4,10 +4,6 @@ import (
 	"godo/internal/repository/entities"
 )
 
-func userFactory(user *entities.User, accountId string) {
-	user.AccountId = accountId
-}
-
 var (
 	account = entities.Account{
 		Name:  "TestingPalace",
