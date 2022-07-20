@@ -58,20 +58,15 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
-
 	var projectDto dto.NewProjectDto
 
-	// projectDto = ctx.Value(entities.ProjectKey{}).(dto.NewProjectDto)
 	err := decodeJSONBody(w, r, &projectDto)
 	if err != nil {
 		handleMalformedJSONError(w, err)
 		return
 	}
 
-	ctx := r.Context()
-
-	var user entities.User
-	user = getUserFromContext(ctx)
+	user := getUserFromContext(r.Context())
 
 	// Validate the project looks OK
 	err = projectDto.Validate()

@@ -110,6 +110,11 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure the account exists
 	accountExists, err := u.accountService.AccountExists(request.AccountId)
+	if err != nil {
+		api.ReturnError(api.AccountNotCreatedError, http.StatusInternalServerError, w)
+		return
+	}
+
 	if !accountExists {
 		api.ReturnError(api.AccountNotFoundError, http.StatusNotFound, w)
 		return

@@ -28,8 +28,7 @@ func NewAccountsHandler(
 }
 
 func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
-	var accountDto dto.NewAccountDto
-	accountDto = r.Context().Value(entities.AccountKey{}).(dto.NewAccountDto)
+	accountDto := r.Context().Value(entities.AccountKey{}).(dto.NewAccountDto)
 
 	// Check that the account/user does not already existing
 	// Neither shall be created whilst the other exists

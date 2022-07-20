@@ -15,16 +15,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Converts a struct into a JSON object
-func dataToJson(d interface{}) (string, error) {
-	data, err := json.Marshal(d)
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
-}
-
+// Fetches the given parameter from the HTTP request object
+// Returns a string value and a success boolean
 func getParamFomRequest(r *http.Request, param string) (string, bool) {
 	params := mux.Vars(r)
 	paramValue, paramExists := params[param]
@@ -35,6 +27,7 @@ func getStructFromContext[T any](ctx context.Context, key interface{}) T {
 	return ctx.Value(key).(T)
 }
 
+// Fetches the user from the given HTTP Request context
 func getUserFromContext(ctx context.Context) entities.User {
 	return getStructFromContext[entities.User](ctx, entities.UserKey{})
 }
@@ -71,29 +64,29 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 
 		switch {
 		case errors.As(err, &syntaxError):
-			msg := fmt.Sprintf("Request body contains badly-formed JSON (at position %d)", syntaxError.Offset)
-			return &malformedRequest{status: http.StatusBadRequest, err: errors.New(msg)}
+			errMsg := fmt.Errorf("request body contains badly-formed JSON (at position %d)", syntaxError.Offset)
+			return &malformedRequest{status: http.StatusBadRequest, err: errMsg}
 
 		case errors.Is(err, io.ErrUnexpectedEOF):
-			msg := fmt.Sprintf("Request body contains badly-formed JSON")
-			return &malformedRequest{status: http.StatusBadRequest, err: errors.New(msg)}
+			errMsg := fmt.Errorf("request body contains badly-formed JSON")
+			return &malformedRequest{status: http.StatusBadRequest, err: errMsg}
 
 		case errors.As(err, &unmarshalTypeError):
-			msg := fmt.Sprintf("Request body contains an invalid value for the %q field (at position %d)", unmarshalTypeError.Field, unmarshalTypeError.Offset)
-			return &malformedRequest{status: http.StatusBadRequest, err: errors.New(msg)}
+			errMsg := fmt.Errorf("request body contains an invalid value for the %q field (at position %d)", unmarshalTypeError.Field, unmarshalTypeError.Offset)
+			return &malformedRequest{status: http.StatusBadRequest, err: errMsg}
 
 		case strings.HasPrefix(err.Error(), "json: unknown field "):
 			fieldName := strings.TrimPrefix(err.Error(), "json: unknown field ")
-			msg := fmt.Sprintf("Request body contains unknown field %s", fieldName)
-			return &malformedRequest{status: http.StatusBadRequest, err: errors.New(msg)}
+			errMsg := fmt.Errorf("request body contains unknown field %s", fieldName)
+			return &malformedRequest{status: http.StatusBadRequest, err: errMsg}
 
 		case errors.Is(err, io.EOF):
-			msg := "Request body must not be empty"
-			return &malformedRequest{status: http.StatusBadRequest, err: errors.New(msg)}
+			errMsg := errors.New("request body must not be empty")
+			return &malformedRequest{status: http.StatusBadRequest, err: errMsg}
 
 		case err.Error() == "http: request body too large":
-			msg := "Request body must not be larger than 1MB"
-			return &malformedRequest{status: http.StatusRequestEntityTooLarge, err: errors.New(msg)}
+			errMsg := errors.New("request body must not be larger than 1MB")
+			return &malformedRequest{status: http.StatusRequestEntityTooLarge, err: errMsg}
 
 		default:
 			return err
@@ -102,7 +95,7 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 
 	err = dec.Decode(&struct{}{})
 	if err != io.EOF {
-		msg := "Request body must only contain a single JSON object"
+		msg := "request body must only contain a single JSON object"
 		return &malformedRequest{status: http.StatusBadRequest, err: errors.New(msg)}
 	}
 

@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"fmt"
 	"godo/internal/api"
 	"godo/internal/helper/ilog"
@@ -42,7 +41,7 @@ func (q *apiUserQuery) CreateUser(newUser entities.User) (*entities.User, error)
 	err := newUser.Validate()
 	if err != nil {
 		q.log.Warn("The user did not pass validation. ", err)
-		return nil, errors.New(fmt.Sprintf("The user is not valid: %s", err.Error()))
+		return nil, fmt.Errorf("the user is not valid: %s", err)
 	}
 
 	// Hash the user's password

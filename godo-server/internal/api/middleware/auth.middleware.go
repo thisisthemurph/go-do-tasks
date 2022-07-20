@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"godo/internal/api"
 	"godo/internal/api/services"
 	"godo/internal/auth"
 	"godo/internal/helper/ilog"
@@ -46,8 +46,8 @@ func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.
 		if err != nil {
 			m.log.Errorf("The TokenRequest failed validation: %s", err)
 
-			e := errors.New(fmt.Sprintf("Error validating TokenRequest: %s", err))
-			http.Error(w, e.Error(), http.StatusBadRequest)
+			e := fmt.Errorf("error validating TokenRequest: %s", err)
+			api.ReturnError(e, http.StatusBadRequest, w)
 			return
 		}
 
