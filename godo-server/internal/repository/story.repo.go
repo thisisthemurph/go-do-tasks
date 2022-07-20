@@ -6,8 +6,9 @@ import (
 )
 
 type StoryQuery interface {
-	GetStoryById(storyId string) (*entities.Story, error)
-	GetAllStories() ([]*entities.Story, error)
+	GetAllStories(accountId string) ([]*entities.Story, error)
+	GetStoryById(accountId, storyId string) (*entities.Story, error)
+	CreateStory(newStory *entities.Story) (*entities.Story, error)
 }
 
 type storyQuery struct {
@@ -20,17 +21,49 @@ func (d *dao) NewStoryQuery(logger ilog.StdLogger) StoryQuery {
 	}
 }
 
-func (q *storyQuery) GetAllStories() ([]*entities.Story, error) {
-	stories := []*entities.Story{}
-	result := Database.Find(&stories)
-	ilog.ErrorlnIf(result.Error, q.log)
+func (q *storyQuery) GetAllStories(accountId string) ([]*entities.Story, error) {
+	q.log.Debugf("Fetching all stories with accountId %s", accountId)
 
+	stories := []*entities.Story{}
+	result := Database.
+		Preload("Creator", "account_id = ?", accountId).
+		Joins("JOIN users on stories.creator_id = users.id").
+		Where("users.account_id = ?", accountId).
+		Find(&stories)
+
+	ilog.ErrorlnIf(result.Error, q.log)
 	return stories, result.Error
 }
 
-func (q *storyQuery) GetStoryById(storyId string) (*entities.Story, error) {
-	story := entities.Story{}
-	result := Database.First(&story, 1)
+func (q *storyQuery) GetStoryById(accountId, storyId string) (*entities.Story, error) {
+	q.log.Debugf("Fetching story with accountId %s and storyId %s", accountId, storyId)
 
+	story := entities.Story{}
+	result := Database.
+		Preload("Creator", "account_id = ?", accountId).
+		Joins("JOIN users on stories.creator_id = users.id").
+		Where("users.account_id = ?", accountId).
+		First(&story, "stories.id = ?", storyId)
+
+	ilog.ErrorlnIf(result.Error, q.log)
 	return &story, result.Error
+}
+
+func (q *storyQuery) CreateStory(newStory *entities.Story) (*entities.Story, error) {
+	q.log.Debugf("Creating story with name %s", newStory.Name)
+
+	result := Database.Create(&newStory)
+	ilog.ErrorlnIf(result.Error, q.log)
+
+	return newStory, result.Error
+}
+
+func (q *storyQuery) Exists(storyId string) bool {
+	q.log.Info("Checking if story with storyId %s exists", storyId)
+
+	story := &entities.Story{}
+	result := Database.First(story, "id = ?", storyId)
+
+	q.log.Println(result.RowsAffected)
+	return result.RowsAffected == 1
 }

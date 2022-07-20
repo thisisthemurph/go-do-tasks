@@ -32,8 +32,8 @@ func (p *projectService) GetProjects(accountId string) ([]*entities.Project, err
 	projects, err := p.query.GetAllProjects(accountId)
 
 	if err != nil {
-		p.log.Warn("Error fetching projects from the database")
-		return nil, errors.New("No projects present in the database")
+		p.log.Infof("Error fetching projects from the database: ", err.Error())
+		return nil, errors.New("no projects present in the database")
 	}
 
 	return projects, nil
@@ -44,7 +44,7 @@ func (p *projectService) GetProjectById(projectId, accountId string) (*entities.
 
 	if err != nil {
 		p.log.Infof("Project with id %s not found", projectId)
-		return nil, api.ProjectNotFoundError
+		return nil, api.ErrorProjectNotFound
 	}
 
 	return project, nil
@@ -55,7 +55,7 @@ func (p *projectService) CreateProject(newProject *entities.Project) (*entities.
 
 	if err != nil {
 		p.log.Error("Could not create Project: ", err)
-		return nil, api.ProjectNotCreatedError
+		return nil, api.ErrorProjectNotCreated
 	}
 
 	return createdProject, nil
@@ -65,13 +65,13 @@ func (p *projectService) UpdateProject(projectId string, newProjectData *entitie
 	projectExists := p.query.Exists(projectId)
 	if !projectExists {
 		p.log.Warnf("Project with id %s does not exist", projectId)
-		return api.ProjectNotFoundError
+		return api.ErrorProjectNotFound
 	}
 
 	err := p.query.UpdateProject(projectId, newProjectData)
 	if err != nil {
 		p.log.Error("Could not update Project: ", err)
-		return errors.New("There has been an issue updating the project")
+		return errors.New("issue updating the project")
 	}
 
 	return nil
@@ -81,13 +81,13 @@ func (p *projectService) DeleteProject(projectId string) error {
 	projectExists := p.query.Exists(projectId)
 	if !projectExists {
 		p.log.Warnf("Project with id %s not found", projectId)
-		return api.ProjectNotFoundError
+		return api.ErrorProjectNotFound
 	}
 
 	err := p.query.DeleteProject(projectId)
 	if err != nil {
 		p.log.Errorf("Could not delete the project with id %s: %s", projectId, err.Error())
-		return errors.New("There has been an issue deleting the project")
+		return errors.New("issue deleting the project")
 	}
 
 	return nil

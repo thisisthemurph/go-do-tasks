@@ -35,22 +35,22 @@ func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	accountExists, err := a.accountService.AccountWithEmailAddressExists(accountDto.UserEmail)
 	if err != nil {
 		a.log.Error("Issue checking if account exists: ", err)
-		api.ReturnError(api.AccountNotCreatedError, http.StatusInternalServerError, w)
+		api.ReturnError(api.ErrorAccountNotCreated, http.StatusInternalServerError, w)
 		return
 	}
 
 	userExists, err := a.userService.UserWithEmailAddressExists(accountDto.UserEmail)
 	if err != nil {
 		a.log.Error("Issue checking if user exists: ", err)
-		api.ReturnError(api.AccountNotCreatedError, http.StatusInternalServerError, w)
+		api.ReturnError(api.ErrorAccountNotCreated, http.StatusInternalServerError, w)
 		return
 	}
 
 	if accountExists {
-		api.ReturnError(api.AccountAlreadyExistsError, http.StatusBadRequest, w)
+		api.ReturnError(api.ErrorAccountAlreadyExists, http.StatusBadRequest, w)
 		return
 	} else if userExists {
-		api.ReturnError(api.UserAlreadyExistsError, http.StatusFound, w)
+		api.ReturnError(api.ErrorUserAlreadyExists, http.StatusFound, w)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
 
 	createdAccount, err := a.accountService.CreateAccount(&newAccount)
 	if err != nil {
-		api.ReturnError(api.AccountNotCreatedError, http.StatusInternalServerError, w)
+		api.ReturnError(api.ErrorAccountNotCreated, http.StatusInternalServerError, w)
 		return
 	}
 

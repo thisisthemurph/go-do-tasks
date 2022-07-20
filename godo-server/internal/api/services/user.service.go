@@ -32,7 +32,7 @@ func (s *userService) GetUserByEmailAddress(email string) (*entities.User, error
 	}
 
 	if !exists {
-		return nil, api.UserNotFoundError
+		return nil, api.ErrorUserNotFound
 	}
 
 	var user *entities.User
@@ -47,7 +47,7 @@ func (s *userService) CreateUser(newUser entities.User) (*entities.User, error) 
 	}
 
 	if exists {
-		return nil, api.UserAlreadyExistsError
+		return nil, api.ErrorUserAlreadyExists
 	}
 
 	return s.query.CreateUser(newUser)

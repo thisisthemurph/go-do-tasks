@@ -57,8 +57,8 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 		break
-	case api.UserNotFoundError:
-		api.ReturnError(api.UserAuthenticationError, http.StatusUnauthorized, w)
+	case api.ErrorUserNotFound:
+		api.ReturnError(api.ErrorUserAuthentication, http.StatusUnauthorized, w)
 		return
 	default:
 		api.ReturnError(err, http.StatusInternalServerError, w)
@@ -69,7 +69,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	err = user.VerifyPassword(request.Password)
 	if err != nil {
 		u.log.Warn("Bad authentication: incorrect password")
-		api.ReturnError(api.UserAuthenticationError, http.StatusUnauthorized, w)
+		api.ReturnError(api.ErrorUserAuthentication, http.StatusUnauthorized, w)
 		return
 	}
 
@@ -111,12 +111,12 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	// Ensure the account exists
 	accountExists, err := u.accountService.AccountExists(request.AccountId)
 	if err != nil {
-		api.ReturnError(api.AccountNotCreatedError, http.StatusInternalServerError, w)
+		api.ReturnError(api.ErrorAccountNotCreated, http.StatusInternalServerError, w)
 		return
 	}
 
 	if !accountExists {
-		api.ReturnError(api.AccountNotFoundError, http.StatusNotFound, w)
+		api.ReturnError(api.ErrorAccountNotFound, http.StatusNotFound, w)
 		return
 	}
 
@@ -135,7 +135,7 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 		break
-	case api.UserAlreadyExistsError:
+	case api.ErrorUserAlreadyExists:
 		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	default:
