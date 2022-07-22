@@ -2,8 +2,6 @@ package entities
 
 import (
 	"fmt"
-
-	"github.com/go-playground/validator"
 )
 
 type Story struct {
@@ -20,11 +18,6 @@ type Story struct {
 	TimestampBase
 }
 
-func (s Story) ToString() string {
+func (s Story) String() string {
 	return fmt.Sprintf("Story{Name=%v}", s.Name)
-}
-
-func (s *Story) Validate() error {
-	validate := validator.New()
-	return validate.Struct(s)
 }

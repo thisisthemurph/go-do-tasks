@@ -1,9 +1,5 @@
 package entities
 
-import (
-	"github.com/go-playground/validator"
-)
-
 type Task struct {
 	Base
 
@@ -17,9 +13,4 @@ type Task struct {
 	Creator     User   `gorm:"foreignKey:CreatorId"`
 
 	TimestampBase
-}
-
-func (t *Task) Validate() error {
-	validate := validator.New()
-	return validate.Struct(t)
 }

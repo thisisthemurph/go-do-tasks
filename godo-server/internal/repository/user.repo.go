@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"godo/internal/api"
 	"godo/internal/helper/ilog"
+	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 )
 
@@ -38,7 +39,7 @@ func (q *apiUserQuery) CreateUser(newUser entities.User) (*entities.User, error)
 	newUser.Discriminator = discriminator
 
 	// Validate the user
-	err := newUser.Validate()
+	err := validate.Struct(newUser)
 	if err != nil {
 		q.log.Warn("The user did not pass validation. ", err)
 		return nil, fmt.Errorf("the user is not valid: %s", err)

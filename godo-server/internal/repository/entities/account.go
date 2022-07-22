@@ -1,7 +1,5 @@
 package entities
 
-import "github.com/go-playground/validator"
-
 type Account struct {
 	Base
 
@@ -12,8 +10,3 @@ type Account struct {
 }
 
 type AccountKey struct{}
-
-func (a *Account) Validate() error {
-	validate := validator.New()
-	return validate.Struct(a)
-}

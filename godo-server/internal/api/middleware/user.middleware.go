@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"godo/internal/api"
 	"godo/internal/helper/ilog"
+	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"net/http"
 )
@@ -21,7 +22,7 @@ func (m *UserMiddleware) ValidateUserMiddleware(next http.Handler) http.Handler 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var user entities.User
 
-		err := user.FromJSON(r.Body)
+		err := api.FromJSON(user, r.Body)
 		if err != nil {
 			m.log.Error("The User data was not in the expected JSON format")
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -29,7 +30,7 @@ func (m *UserMiddleware) ValidateUserMiddleware(next http.Handler) http.Handler 
 		}
 
 		// Validate the project
-		err = user.Validate()
+		err = validate.Struct(user)
 		if err != nil {
 			m.log.Errorf("The User failed validation: %s", err)
 

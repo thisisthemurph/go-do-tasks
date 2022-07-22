@@ -1,15 +1,10 @@
 package entities
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log"
-	"net/http"
-
-	"github.com/go-playground/validator"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 )
 
 type User struct {
@@ -47,34 +42,4 @@ func (u *User) VerifyPassword(passwordCheck string) error {
 	}
 
 	return nil
-}
-
-func (u *User) ToJSON(w io.Writer) error {
-	enc := json.NewEncoder(w)
-	err := enc.Encode(u)
-	if err != nil {
-		log.Println("Issue encoding User JSON", err)
-	}
-
-	return err
-}
-
-func (u *User) FromJSON(r io.Reader) error {
-	dec := json.NewDecoder(r)
-	err := dec.Decode(u)
-	if err != nil {
-		log.Println("Issue decoding User JSON:", err)
-	}
-
-	return err
-}
-
-func (u User) FromHttpRequest(r *http.Request) {
-	log.Println("Decoding", u)
-	u = r.Context().Value(UserKey{}).(User)
-}
-
-func (u *User) Validate() error {
-	validate := validator.New()
-	return validate.Struct(u)
 }
