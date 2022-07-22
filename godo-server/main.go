@@ -118,6 +118,7 @@ func buildRouter(services ServicesCollection, logger logrus.FieldLogger) *mux.Ro
 	configureUserAuthRouter(router, services)
 	configureProjectRouter(router, services, middlewares)
 	configureStoryRouter(router, services, middlewares)
+	configureTaskRouter(router, services, middlewares)
 
 	return r
 }
@@ -160,9 +161,11 @@ func configureProjectRouter(router *mux.Router, services ServicesCollection, mid
 
 	projectPostRouter := router.Methods(http.MethodPost).Subrouter()
 	projectPostRouter.HandleFunc("/project", projectHandler.CreateProject)
-	projectPostRouter.HandleFunc("/project/{id:[a-f0-9-]+}/status", projectHandler.UpdateProjectStatus)
-	//projectPostRouter.Use(middlewares.Project.ValidateNewProjectDtoMiddleware)
 	projectPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+
+	projectPutRouter := router.Methods(http.MethodPut).Subrouter()
+	projectPutRouter.HandleFunc("/project/{id:[a-f0-9-]+}/status", projectHandler.UpdateProjectStatus)
+	projectPutRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
 }
 
 func configureStoryRouter(router *mux.Router, services ServicesCollection, middlewares MiddlewareCollection) {
@@ -187,6 +190,10 @@ func configureTaskRouter(router *mux.Router, services ServicesCollection, middle
 	taskGetRouter.HandleFunc("/task", taskHandler.GetAllTasks)
 	taskGetRouter.HandleFunc("/task/{id:[a-f0-9-]+}", taskHandler.GetTaskById)
 	taskGetRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+
+	taskPostRouter := router.Methods(http.MethodPost).Subrouter()
+	taskPostRouter.HandleFunc("/task", taskHandler.CreateTask)
+	taskPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
 }
 
 func makeLogger() *logrus.Logger {

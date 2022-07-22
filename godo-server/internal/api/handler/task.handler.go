@@ -57,7 +57,7 @@ func (t *Tasks) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	err = validate.Struct(taskDto)
 	if err != nil {
-		t.log.Error(err)
+		t.log.Error("Invalid NewTaskDto: ", err)
 		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
