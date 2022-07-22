@@ -2,22 +2,30 @@ package entities
 
 import (
 	"fmt"
+	"github.com/jinzhu/gorm"
+	"godo/internal/repository/enums"
 )
 
 type Story struct {
 	Base
 
-	ProjectId   string  `json:"project_id"`
-	Project     Project `json:"-"`
-	Name        string  `json:"name" validate:"required,min=1,max=40"`
-	Description string  `json:"description" validate:"max=280"`
-	CreatorId   string  `json:"-"`
-	Creator     User    `json:"creator" gorm:"foreignKey:CreatorId"`
-	Tasks       []Task
+	Name        string            `json:"name" gorm:"not null" validate:"required,min=1,max=40"`
+	Description string            `json:"description" validate:"max=280"`
+	Status      enums.StoryStatus `json:"-" gorm:"type:smallint;default:0;not null"`
+	StatusValue string            `json:"status" gorm:"-:all"`
+	ProjectId   string            `json:"project_id"`
+	Project     Project           `json:"-"`
+	CreatorId   string            `json:"-"`
+	Creator     User              `json:"creator" gorm:"foreignKey:CreatorId"`
+	Tasks       []Task            `json:"tasks"`
 
 	TimestampBase
 }
 
 func (s Story) String() string {
 	return fmt.Sprintf("Story{Name=%v}", s.Name)
+}
+
+func (s Story) AfterFind(tx *gorm.DB) {
+	s.StatusValue = s.Status.String()
 }
