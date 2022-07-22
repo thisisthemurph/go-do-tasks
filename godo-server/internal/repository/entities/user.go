@@ -8,7 +8,7 @@ import (
 )
 
 type User struct {
-	ID            uint       `gorm:"primary_key"`
+	ID            uint       `json:"id" gorm:"primary_key"`
 	Name          string     `json:"name" validate:"required,min=1,max=25"`
 	Username      string     `json:"username" gorm:"index" validate:"required"`
 	Discriminator uint32     `json:"discriminator" validate:"required"`
