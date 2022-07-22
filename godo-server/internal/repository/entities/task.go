@@ -28,3 +28,8 @@ func (t Task) AfterFind(tx *gorm.DB) {
 	t.TypeValue = t.Type.String()
 	t.StatusValue = t.Status.String()
 }
+
+func (t Task) AfterCreate(tx *gorm.DB) {
+	t.TypeValue = t.Type.String()
+	t.StatusValue = t.Status.String()
+}

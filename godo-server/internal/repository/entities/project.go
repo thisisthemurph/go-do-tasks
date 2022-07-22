@@ -23,10 +23,14 @@ type Project struct {
 type ProjectList []*Project
 type ProjectKey struct{}
 
-func (p *Project) ToString() string {
-	return fmt.Sprintf("Project{Name=%v}", p.Name)
+func (s *Project) ToString() string {
+	return fmt.Sprintf("Project{Name=%v}", s.Name)
 }
 
-func (p *Project) AfterFind(tx *gorm.DB) {
-	p.StatusValue = p.Status.String()
+func (s *Project) AfterFind(tx *gorm.DB) {
+	s.StatusValue = s.Status.String()
+}
+
+func (s *Project) AfterCreate(tx *gorm.DB) {
+	s.StatusValue = s.Status.String()
 }

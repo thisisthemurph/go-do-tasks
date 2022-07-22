@@ -29,3 +29,7 @@ func (s Story) String() string {
 func (s Story) AfterFind(tx *gorm.DB) {
 	s.StatusValue = s.Status.String()
 }
+
+func (s Story) AfterCreate(tx *gorm.DB) {
+	s.StatusValue = s.Status.String()
+}
