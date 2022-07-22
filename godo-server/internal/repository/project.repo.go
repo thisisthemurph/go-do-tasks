@@ -92,8 +92,7 @@ func (q *projectQuery) Exists(projectId string) bool {
 
 	project := &entities.Project{}
 	r := Database.First(project, "id = ?", projectId)
-
-	q.log.Println(r.RowsAffected)
+	ilog.ErrorlnIf(r.Error, q.log)
 
 	return r.RowsAffected == 1
 }

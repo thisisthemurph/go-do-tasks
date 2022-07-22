@@ -2,15 +2,15 @@ package enums
 
 import "fmt"
 
-type StoryStatus uint8
+type ProgressStatus uint8
 
 const (
-	New StoryStatus = iota
+	New ProgressStatus = iota
 	InProgress
 	Complete
 )
 
-func (s StoryStatus) String() string {
+func (s ProgressStatus) String() string {
 	switch s {
 	case New:
 	case InProgress:
@@ -22,6 +22,6 @@ func (s StoryStatus) String() string {
 	return "New"
 }
 
-func (s StoryStatus) Print() {
+func (s ProgressStatus) Print() {
 	fmt.Println("ProjectStatus: ", s.String())
 }

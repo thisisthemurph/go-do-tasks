@@ -9,15 +9,15 @@ import (
 type Story struct {
 	Base
 
-	Name        string            `json:"name" gorm:"not null" validate:"required,min=1,max=40"`
-	Description string            `json:"description" validate:"max=280"`
-	Status      enums.StoryStatus `json:"-" gorm:"type:smallint;default:0;not null"`
-	StatusValue string            `json:"status" gorm:"-:all"`
-	ProjectId   string            `json:"project_id"`
-	Project     Project           `json:"-"`
-	CreatorId   string            `json:"-"`
-	Creator     User              `json:"creator" gorm:"foreignKey:CreatorId"`
-	Tasks       []Task            `json:"tasks"`
+	Name        string               `json:"name" gorm:"not null" validate:"required,min=1,max=40"`
+	Description string               `json:"description" validate:"max=280"`
+	Status      enums.ProgressStatus `json:"-" gorm:"type:smallint;default:0;not null"`
+	StatusValue string               `json:"status" gorm:"-:all"`
+	ProjectId   string               `json:"project_id"`
+	Project     Project              `json:"-"`
+	CreatorId   string               `json:"-"`
+	Creator     User                 `json:"creator" gorm:"foreignKey:CreatorId"`
+	Tasks       []Task               `json:"tasks"`
 
 	TimestampBase
 }

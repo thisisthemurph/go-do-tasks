@@ -45,9 +45,10 @@ func main() {
 type ServicesCollection struct {
 	authService    services.AuthService
 	accountService services.AccountService
-	userService    services.UserService
 	projectService services.ProjectService
 	storyService   services.StoryService
+	taskService    services.TaskService
+	userService    services.UserService
 }
 
 type MiddlewareCollection struct {
@@ -62,32 +63,37 @@ func buildServices(dao repository.DAO, config config.Config) ServicesCollection 
 	authServiceLogger := makeLoggerWithTag("AuthService")
 	accountServiceLogger := makeLoggerWithTag("AccountService")
 	accountQueryLogger := makeLoggerWithTag("AccountQuery")
+	projectServiceLogger := makeLoggerWithTag("ProjectService")
+	projectQueryLogger := makeLoggerWithTag("ProjectRepo")
+	storyServiceLogger := makeLoggerWithTag("ProjectService")
+	storyQueryLogger := makeLoggerWithTag("StoryRepo")
+	taskServiceLogger := makeLoggerWithTag("TaskService")
+	taskQueryLogger := makeLoggerWithTag("TasQuery")
 	userServiceLogger := makeLoggerWithTag("UserService")
 	userQueryLogger := makeLoggerWithTag("UserQuery")
-	projectServiceLogger := makeLoggerWithTag("ProjectService")
-	storyServiceLogger := makeLoggerWithTag("ProjectService")
-	projectQueryLogger := makeLoggerWithTag("ProjectRepo")
-	storyQueryLogger := makeLoggerWithTag("StoryRepo")
 
 	// Initialize the repositories
 	accountQuery := dao.NewAccountQuery(accountQueryLogger)
-	userQuery := dao.NewApiUserQuery(userQueryLogger)
 	projectQuery := dao.NewProjectQuery(projectQueryLogger)
 	storyQuery := dao.NewStoryQuery(storyQueryLogger)
+	taskQuery := dao.NewTaskQuery(taskQueryLogger)
+	userQuery := dao.NewApiUserQuery(userQueryLogger)
 
 	// Initialize the services
 	authService := services.NewAuthService(userQuery, []byte(config.JWTKey), authServiceLogger)
 	accountService := services.NewAccountService(accountQuery, accountServiceLogger)
-	userService := services.NewUserService(userQuery, userServiceLogger)
 	projectService := services.NewProjectService(projectQuery, projectServiceLogger)
 	storyService := services.NewStoryService(storyQuery, storyServiceLogger)
+	taskService := services.NewTaskService(taskQuery, taskServiceLogger)
+	userService := services.NewUserService(userQuery, userServiceLogger)
 
 	return ServicesCollection{
 		authService,
 		accountService,
-		userService,
 		projectService,
 		storyService,
+		taskService,
+		userService,
 	}
 }
 
@@ -171,6 +177,16 @@ func configureStoryRouter(router *mux.Router, services ServicesCollection, middl
 	storyPostRouter := router.Methods(http.MethodPost).Subrouter()
 	storyPostRouter.HandleFunc("/stories", storyHandler.CreateStory)
 	storyPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+}
+
+func configureTaskRouter(router *mux.Router, services ServicesCollection, middlewares MiddlewareCollection) {
+	taskLogger := makeLoggerWithTag("TaskHandler")
+	taskHandler := handler.NewTasksHandler(taskLogger, services.taskService)
+
+	taskGetRouter := router.Methods(http.MethodGet).Subrouter()
+	taskGetRouter.HandleFunc("/task", taskHandler.GetAllTasks)
+	taskGetRouter.HandleFunc("/task/{id:[a-f0-9-]+}", taskHandler.GetTaskById)
+	taskGetRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
 }
 
 func makeLogger() *logrus.Logger {

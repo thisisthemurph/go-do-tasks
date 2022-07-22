@@ -21,6 +21,11 @@ var (
 )
 
 var (
+	ErrorTaskNotFound   = errors.New("the requested task could not be found")
+	ErrorTaskNotCreated = errors.New("could not create the required task")
+)
+
+var (
 	ErrorStoryNotFound   = errors.New("the specified story could not be found")
 	ErrorStoryNotCreated = errors.New("the story could not be created")
 )
