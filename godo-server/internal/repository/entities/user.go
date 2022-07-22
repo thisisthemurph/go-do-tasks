@@ -2,19 +2,22 @@ package entities
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"time"
 )
 
 type User struct {
-	gorm.Model
-	Name          string `json:"name" validate:"required,min=1,max=25"`
-	Username      string `json:"username" gorm:"index" validate:"required"`
-	Discriminator uint32 `json:"discriminator" validate:"required"`
-	Email         string `json:"email" gorm:"unique,index" validate:"required"`
-	Password      string `json:"-" validate:"required"`
-	AccountId     string `json:"-" validate:"required"`
+	ID            uint       `gorm:"primary_key"`
+	Name          string     `json:"name" validate:"required,min=1,max=25"`
+	Username      string     `json:"username" gorm:"index" validate:"required"`
+	Discriminator uint32     `json:"discriminator" validate:"required"`
+	Email         string     `json:"email" gorm:"unique,index" validate:"required"`
+	Password      string     `json:"-" validate:"required"`
+	AccountId     string     `json:"-" validate:"required"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+	DeletedAt     *time.Time `json:"-" sql:"index"`
 }
 
 type UserKey struct{}
