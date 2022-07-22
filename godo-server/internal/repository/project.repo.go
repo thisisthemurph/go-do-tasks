@@ -7,7 +7,7 @@ import (
 )
 
 type ProjectQuery interface {
-	GetProjectById(accountId string, storyId string) (*entities.Project, error)
+	GetProjectById(projectId string, accountId string) (*entities.Project, error)
 	GetAllProjects(accountId string) ([]*entities.Project, error)
 	CreateProject(newProject *entities.Project) (*entities.Project, error)
 	UpdateProject(projectId string, newProject *entities.Project) error
@@ -26,7 +26,7 @@ func (d *dao) NewProjectQuery(logger ilog.StdLogger) ProjectQuery {
 func (q *projectQuery) GetAllProjects(accountId string) ([]*entities.Project, error) {
 	q.log.Infof("Fetching all project with accountId %s", accountId)
 
-	projects := []*entities.Project{}
+	var projects []*entities.Project
 	result := Database.
 		Preload("Creator", "account_id = ?", accountId).
 		Joins("JOIN users on projects.creator_id = users.id").
@@ -38,14 +38,13 @@ func (q *projectQuery) GetAllProjects(accountId string) ([]*entities.Project, er
 }
 
 func (q *projectQuery) GetProjectById(projectId string, accountId string) (*entities.Project, error) {
-	q.log.Infof("Fetching project with projectId %s and accountId %s", projectId, accountId)
+	q.log.Debugf("Fetching project with projectId %s and accountId %s", projectId, accountId)
 
 	project := entities.Project{}
 	result := Database.
 		Preload("Creator", "account_id = ?", accountId).
-		Preload("Stories", "project_id = ?", projectId).
+		Preload("Stories", "stories.project_id = ?", projectId).
 		Joins("JOIN users on projects.creator_id = users.id").
-		Joins("JOIN stories on projects.id = stories.project_id").
 		Where("users.account_id = ?", accountId).
 		First(&project, "projects.id = ?", projectId)
 
