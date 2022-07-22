@@ -84,6 +84,7 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	createdProject, err := p.projectService.CreateProject(&newProject)
+
 	switch err {
 	case nil:
 		break
@@ -121,6 +122,37 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	default:
 		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond("", http.StatusNoContent, w)
+}
+
+func (p *Projects) UpdateProjectStatus(w http.ResponseWriter, r *http.Request) {
+	var statusDto dto.ProjectStatusUpdateDto
+	err := decodeJSONBody(w, r, &statusDto)
+	if err != nil {
+		handleMalformedJSONError(w, err)
+		return
+	}
+
+	projectId, _ := getParamFomRequest(r, "id")
+	user := getUserFromContext(r.Context())
+
+	// Get the project from the database
+	project, err := p.projectService.GetProjectById(projectId, user.AccountId)
+	if err != nil {
+		p.log.Debugf("Could not find project with projectId %s and accountId %s", projectId, user.AccountId)
+		api.ReturnError(api.ErrorProjectNotFound, http.StatusNotFound, w)
+		return
+	}
+
+	// Update the project
+	project.Status = statusDto.Status
+	err = p.projectService.UpdateProject(projectId, project)
+	if err != nil {
+		p.log.Debugf("Could not update with projectId %s and accountId %s", projectId, user.AccountId)
+		api.ReturnError(api.ErrorProjectNotFound, http.StatusNotFound, w)
 		return
 	}
 

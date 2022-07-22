@@ -154,7 +154,8 @@ func configureProjectRouter(router *mux.Router, services ServicesCollection, mid
 
 	projectPostRouter := router.Methods(http.MethodPost).Subrouter()
 	projectPostRouter.HandleFunc("/project", projectHandler.CreateProject)
-	projectPostRouter.Use(middlewares.Project.ValidateNewProjectDtoMiddleware)
+	projectPostRouter.HandleFunc("/project/{id:[a-f0-9-]+}/status", projectHandler.UpdateProjectStatus)
+	//projectPostRouter.Use(middlewares.Project.ValidateNewProjectDtoMiddleware)
 	projectPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
 }
 

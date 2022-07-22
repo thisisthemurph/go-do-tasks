@@ -10,7 +10,7 @@ import (
 
 type ProjectService interface {
 	GetProjects(accountId string) ([]*entities.Project, error)
-	GetProjectById(userId, accountId string) (*entities.Project, error)
+	GetProjectById(projectId, accountId string) (*entities.Project, error)
 	CreateProject(newProject *entities.Project) (*entities.Project, error)
 	Exists(projectId string) bool
 	UpdateProject(projectId string, newProjectData *entities.Project) error
@@ -44,7 +44,7 @@ func (p *projectService) GetProjectById(projectId, accountId string) (*entities.
 	project, err := p.query.GetProjectById(projectId, accountId)
 
 	if err != nil {
-		p.log.Infof("Project with id %s not found", projectId)
+		p.log.Debugf("Project with projectId %s and accountId %s not found", projectId, accountId)
 		return nil, api.ErrorProjectNotFound
 	}
 

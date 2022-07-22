@@ -24,7 +24,7 @@ func (d *dao) NewStoryQuery(logger ilog.StdLogger) StoryQuery {
 func (q *storyQuery) GetAllStories(accountId string) ([]*entities.Story, error) {
 	q.log.Debugf("Fetching all stories with accountId %s", accountId)
 
-	stories := []*entities.Story{}
+	var stories []*entities.Story
 	result := Database.
 		Preload("Creator", "account_id = ?", accountId).
 		Joins("JOIN users on stories.creator_id = users.id").
