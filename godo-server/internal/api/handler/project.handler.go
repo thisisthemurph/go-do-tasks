@@ -107,7 +107,7 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	err := api.FromJSON(&newProjectData, r.Body)
 	if err != nil {
 		p.log.Error("Could not process Project from request body: ", err)
-		api.ReturnError(api.ErrorProjectJsonParse, http.StatusBadRequest, w)
+		api.ReturnError(api.ErrorProjectJSONParse, http.StatusBadRequest, w)
 		return
 	}
 

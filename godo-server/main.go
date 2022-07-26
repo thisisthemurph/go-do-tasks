@@ -23,15 +23,15 @@ func main() {
 	configLogger := makeLoggerWithTag("Config")
 	daoLogger := makeLoggerWithTag("DAO")
 
-	config := config.LoadConfig(configLogger)
+	c := config.LoadConfig(configLogger)
 	repository.CreateAndPopulateDatabase(logger)
 
 	dao := repository.NewDAO(daoLogger)
-	servicesCollection := buildServices(dao, config)
+	servicesCollection := buildServices(dao, c)
 	router := buildRouter(servicesCollection, logger)
 
 	srv := &http.Server{
-		Addr:         "0.0.0.0:" + config.ApiPort,
+		Addr:         "0.0.0.0:" + c.ApiPort,
 		WriteTimeout: time.Second * 15,
 		IdleTimeout:  time.Second * 15,
 		Handler:      cors.Default().Handler(router),
@@ -65,7 +65,7 @@ func buildServices(dao repository.DAO, config config.Config) ServicesCollection 
 	accountQueryLogger := makeLoggerWithTag("AccountQuery")
 	projectServiceLogger := makeLoggerWithTag("ProjectService")
 	projectQueryLogger := makeLoggerWithTag("ProjectRepo")
-	storyServiceLogger := makeLoggerWithTag("ProjectService")
+	storyServiceLogger := makeLoggerWithTag("StoryService")
 	storyQueryLogger := makeLoggerWithTag("StoryRepo")
 	taskServiceLogger := makeLoggerWithTag("TaskService")
 	taskQueryLogger := makeLoggerWithTag("TasQuery")
@@ -172,14 +172,31 @@ func configureStoryRouter(router *mux.Router, services ServicesCollection, middl
 	storyLogger := makeLoggerWithTag("StoryHandler")
 	storyHandler := handler.NewStoriesHandler(storyLogger, services.storyService, services.projectService)
 
-	storyGetRouter := router.Methods(http.MethodGet).Subrouter()
-	storyGetRouter.HandleFunc("/stories", storyHandler.GetAllStories)
-	storyGetRouter.HandleFunc("/stories/{id:[a-f0-9-]+}", storyHandler.GetStoryById)
-	storyGetRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+	r := router.PathPrefix("/story").Subrouter()
+	r.Use(middlewares.Auth.AuthenticateRequestMiddleware)
 
-	storyPostRouter := router.Methods(http.MethodPost).Subrouter()
-	storyPostRouter.HandleFunc("/stories", storyHandler.CreateStory)
-	storyPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+	r.HandleFunc("", storyHandler.CreateStory).Methods(http.MethodPost)
+	r.HandleFunc("", storyHandler.GetAllStories).Methods(http.MethodGet)
+	r.HandleFunc("/{id:[a-f0-9-]+}", storyHandler.GetStoryById).Methods(http.MethodGet)
+	r.HandleFunc("/{id:[a-f0-9-]+}", storyHandler.UpdateStory).Methods(http.MethodPut)
+	r.HandleFunc("/{id:[a-f0-9-]+}", storyHandler.DeleteStory).Methods(http.MethodDelete)
+
+	//storyGetRouter := router.Methods(http.MethodGet).Subrouter()
+	//storyGetRouter.HandleFunc("/story", storyHandler.GetAllStories)
+	//storyGetRouter.HandleFunc("/story/{id:[a-f0-9-]+}", storyHandler.GetStoryById)
+	//storyGetRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+	//
+	//storyPostRouter := router.Methods(http.MethodPost).Subrouter()
+	//storyPostRouter.HandleFunc("/story", storyHandler.CreateStory)
+	//storyPostRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+	//
+	//storyPutRouter := router.Methods(http.MethodPut).Subrouter()
+	//storyPutRouter.HandleFunc("/story/{id:[a-f0-9-]+}", storyHandler.UpdateStory)
+	//storyPutRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
+	//
+	//storyDeleteRouter := router.Methods(http.MethodDelete).Subrouter()
+	//storyDeleteRouter.HandleFunc("story/{id:[a-f0-9-]+}", storyHandler.DeleteStory)
+	//storyDeleteRouter.Use(middlewares.Auth.AuthenticateRequestMiddleware)
 }
 
 func configureTaskRouter(router *mux.Router, services ServicesCollection, middlewares MiddlewareCollection) {

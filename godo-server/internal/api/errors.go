@@ -17,7 +17,7 @@ var (
 var (
 	ErrorProjectNotFound   = errors.New("the requested project could not be found")
 	ErrorProjectNotCreated = errors.New("the project could not be created")
-	ErrorProjectJsonParse  = errors.New("could not process the given project")
+	ErrorProjectJSONParse  = errors.New("could not process the given project")
 )
 
 var (
@@ -28,4 +28,7 @@ var (
 var (
 	ErrorStoryNotFound   = errors.New("the specified story could not be found")
 	ErrorStoryNotCreated = errors.New("the story could not be created")
+	ErrorStoryNotUpdated = errors.New("the story could not be updated")
+	ErrorStoryNotDeleted = errors.New("the story could not be deleted")
+	ErrorStoryJsonParse  = errors.New("could not process the given story")
 )

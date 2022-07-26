@@ -10,8 +10,10 @@ import (
 
 type StoryService interface {
 	GetStories(accountId string) ([]*entities.Story, error)
-	GetStoryById(accountId, userId string) (*entities.Story, error)
+	GetStoryById(accountId, storyId string) (*entities.Story, error)
 	CreateStory(newStory *entities.Story) (*entities.Story, error)
+	UpdateStory(storyId string, newStoryData *entities.Story) error
+	DeleteStory(storyId string) error
 }
 
 type storyService struct {
@@ -55,4 +57,38 @@ func (s *storyService) CreateStory(newStory *entities.Story) (*entities.Story, e
 	}
 
 	return createdStory, nil
+}
+
+func (s *storyService) Exists(storyId string) bool {
+	return s.query.Exists(storyId)
+}
+
+func (s *storyService) UpdateStory(storyId string, newStoryData *entities.Story) error {
+	exists := s.Exists(storyId)
+	if !exists {
+		return api.ErrorStoryNotFound
+	}
+
+	err := s.query.UpdateStory(newStoryData)
+	if err != nil {
+		s.log.Errorf("Could not update Story with storyId %s: %S", storyId, err.Error())
+		return api.ErrorStoryNotUpdated
+	}
+
+	return nil
+}
+
+func (s *storyService) DeleteStory(storyId string) error {
+	exists := s.Exists(storyId)
+	if !exists {
+		return api.ErrorStoryNotFound
+	}
+
+	err := s.query.DeleteStory(storyId)
+	if err != nil {
+		s.log.Errorf("Could not delete Story with storyId %s: %S", storyId, err.Error())
+		return api.ErrorStoryNotDeleted
+	}
+
+	return nil
 }

@@ -61,6 +61,7 @@ func (q *projectQuery) CreateProject(newProject *entities.Project) (*entities.Pr
 	return newProject, response.Error
 }
 
+// UpdateProject TODO: Remove duplicate query
 func (q *projectQuery) UpdateProject(projectId string, newProject *entities.Project) error {
 	project, _ := q.getProjectByIdOnly(projectId)
 
@@ -70,6 +71,7 @@ func (q *projectQuery) UpdateProject(projectId string, newProject *entities.Proj
 		return err
 	}
 
+	// TODO: Place override of props into handler
 	project.Name = newProject.Name
 	project.Description = newProject.Description
 	project.UpdatedAt = time.Now()
@@ -88,7 +90,7 @@ func (q *projectQuery) DeleteProject(projectId string) error {
 }
 
 func (q *projectQuery) Exists(projectId string) bool {
-	q.log.Info("Checking if project with ID %v exists", projectId)
+	q.log.Debugf("Checking if project with ID %s exists", projectId)
 
 	project := &entities.Project{}
 	r := Database.First(project, "id = ?", projectId)

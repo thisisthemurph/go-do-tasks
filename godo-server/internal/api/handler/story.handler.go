@@ -5,6 +5,7 @@ import (
 	"godo/internal/api/dto"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
+	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"net/http"
 )
@@ -49,7 +50,7 @@ func (s *Stories) GetStoryById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	story, err := s.storyService.GetStoryById(storyId, user.AccountId)
+	story, err := s.storyService.GetStoryById(user.AccountId, storyId)
 
 	switch err {
 	case nil:
@@ -83,7 +84,7 @@ func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ensure the project project exists
+	// Ensure the project exists
 	projectExists := s.projectService.Exists(storyDto.ProjectId)
 	if !projectExists {
 		s.log.Debugf("Project with projectId %s not found", storyDto.ProjectId)
@@ -99,7 +100,7 @@ func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 		Creator:     user,
 	}
 
-	createdProject, err := s.storyService.CreateStory(&newStory)
+	created, err := s.storyService.CreateStory(&newStory)
 	switch err {
 	case nil:
 		break
@@ -111,5 +112,89 @@ func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Respond(createdProject, http.StatusCreated, w)
+	api.Respond(created, http.StatusCreated, w)
+}
+
+func (s *Stories) UpdateStory(w http.ResponseWriter, r *http.Request) {
+	storyId, _ := getParamFomRequest(r, "id")
+
+	var storyDto dto.NewStoryDto
+	err := decodeJSONBody(w, r, &storyDto)
+	if err != nil {
+		handleMalformedJSONError(w, err)
+		return
+	}
+
+	user := getUserFromContext(r.Context())
+
+	// Validate the Dto
+	if err := validate.Struct(storyDto); err != nil {
+		s.log.Error("The storyDto is not valid: ", err)
+		api.ReturnError(api.ErrorStoryJsonParse, http.StatusBadRequest, w)
+		return
+	}
+
+	// Ensure the project for the story exists
+	projectExists := s.projectService.Exists(storyDto.ProjectId)
+	if !projectExists {
+		s.log.Debugf("Project with projectId %s not found", storyDto.ProjectId)
+		api.ReturnError(api.ErrorProjectNotFound, http.StatusNotFound, w)
+		return
+	}
+
+	// Update the story
+	ns, err := s.storyService.GetStoryById(user.AccountId, storyId)
+	if err != nil {
+		s.log.Debugf("The story with storyId %s and accountId % could not be found", storyId, user.AccountId)
+		api.ReturnError(api.ErrorStoryNotFound, http.StatusNotFound, w)
+		return
+	}
+
+	ns.Name = storyDto.Name
+	ns.Description = storyDto.Description
+
+	// Verify and update the projectId
+	if storyDto.ProjectId != ns.ProjectId {
+		ns.ProjectId = storyDto.ProjectId
+		// TODO: If update projectId -> Verify project is owned by account
+	}
+
+	err = s.storyService.UpdateStory(storyId, ns)
+
+	switch err {
+	case nil:
+		break
+	case api.ErrorStoryNotFound:
+		api.ReturnError(api.ErrorStoryNotFound, http.StatusNotFound, w)
+		return
+	case api.ErrorStoryNotUpdated:
+		api.ReturnError(api.ErrorStoryNotUpdated, http.StatusInternalServerError, w)
+		return
+	default:
+		return
+	}
+
+	api.Respond("", http.StatusNoContent, w)
+}
+
+func (s *Stories) DeleteStory(w http.ResponseWriter, r *http.Request) {
+	storyId, _ := getParamFomRequest(r, "id")
+
+	err := s.storyService.DeleteStory(storyId)
+
+	switch err {
+	case nil:
+		break
+	case api.ErrorStoryNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	case api.ErrorStoryNotDeleted:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond("", http.StatusNoContent, w)
 }
