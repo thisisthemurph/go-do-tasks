@@ -24,7 +24,7 @@ func (d *dao) NewAccountQuery(logger ilog.StdLogger) AccountQuery {
 func (q *accountQuery) GetAllAccounts() ([]*entities.Account, error) {
 	q.log.Info("Fetching all accounts")
 
-	accounts := []*entities.Account{}
+	var accounts []*entities.Account
 	err := Database.Find(&accounts).Error
 	ilog.ErrorlnIf(err, q.log)
 

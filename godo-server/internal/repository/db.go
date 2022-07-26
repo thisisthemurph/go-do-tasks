@@ -22,8 +22,8 @@ func GetDatabase(logger ilog.StdLogger) *gorm.DB {
 }
 
 func connect(logger ilog.StdLogger) *gorm.DB {
-	configuration := configuration.LoadConfig(logger)
-	connectionString := makeConnectionString(configuration)
+	c := configuration.LoadConfig(logger)
+	connectionString := makeConnectionString(c)
 
 	db, err := gorm.Open("postgres", connectionString)
 

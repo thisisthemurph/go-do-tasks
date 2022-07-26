@@ -28,7 +28,7 @@ func NewAuthMiddleware(
 	}
 }
 
-// Used to validate a request for a JWT
+// ValidateTokenRequestMiddleware Used to validate a request for a JWT
 // The TokenRequest represents the auth data (e.g. emil and password) user to authenticate
 func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +60,7 @@ func (m *AuthMiddleware) ValidateTokenRequestMiddleware(next http.Handler) http.
 	})
 }
 
-// Used to authenticate a given JWT
+// AuthenticateRequestMiddleware Used to authenticate a given JWT
 func (m *AuthMiddleware) AuthenticateRequestMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenValue := r.Header.Get("Authorization")

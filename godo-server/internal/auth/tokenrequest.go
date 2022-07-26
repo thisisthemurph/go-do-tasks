@@ -2,11 +2,9 @@ package auth
 
 import (
 	"encoding/json"
+	"github.com/go-playground/validator"
 	"io"
 	"log"
-	"net/http"
-
-	"github.com/go-playground/validator"
 )
 
 type TokenRequest struct {
@@ -24,10 +22,6 @@ func (t *TokenRequest) FromJSON(r io.Reader) error {
 	}
 
 	return err
-}
-
-func (t TokenRequest) FromHttpRequest(r *http.Request) {
-	t = r.Context().Value(TokenRequestKey{}).(TokenRequest)
 }
 
 func (t *TokenRequest) Validate() error {
