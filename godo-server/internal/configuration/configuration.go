@@ -21,11 +21,11 @@ func LoadDevConfig(logger ilog.StdLogger) (conf Config) {
 }
 
 func LoadConfig(logger ilog.StdLogger) (conf Config) {
-	return makeConfig("configuration", logger)
+	return makeConfig("config", logger)
 }
 
 func makeConfig(configName string, log ilog.StdLogger) (conf Config) {
-	viper.SetConfigName("configuration")
+	viper.SetConfigName(configName)
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("../..")
