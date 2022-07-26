@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"godo/internal/api"
+	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"io"
 	"net/http"
@@ -109,4 +110,21 @@ func handleMalformedJSONError(w http.ResponseWriter, err error) {
 	} else {
 		api.ReturnError(errors.New(http.StatusText(http.StatusInternalServerError)), http.StatusInternalServerError, w)
 	}
+}
+
+func getDtoFromJSONBody[T any](w http.ResponseWriter, r *http.Request) (*T, error) {
+	var obj T
+	err := decodeJSONBody(w, r, &obj)
+	if err != nil {
+		handleMalformedJSONError(w, err)
+		return nil, err
+	}
+
+	err = validate.Struct(obj)
+	if err != nil {
+		api.ReturnError(err, http.StatusBadRequest, w)
+		return nil, err
+	}
+
+	return &obj, nil
 }

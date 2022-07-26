@@ -23,5 +23,5 @@ func (s ProgressStatus) String() string {
 }
 
 func (s ProgressStatus) Print() {
-	fmt.Println("ProjectStatus: ", s.String())
+	fmt.Println("ProgressStatus: ", s.String())
 }

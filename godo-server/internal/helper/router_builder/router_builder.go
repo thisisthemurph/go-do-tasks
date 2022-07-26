@@ -89,4 +89,5 @@ func (b *routerBuilder) buildTaskRouter() {
 	b.ar.HandleFunc("/task", taskHandler.CreateTask).Methods(http.MethodPost)
 	b.ar.HandleFunc("/task", taskHandler.GetAllTasks).Methods(http.MethodGet)
 	b.ar.HandleFunc("/task/{id:[a-f0-9-]+}", taskHandler.GetTaskById).Methods(http.MethodGet)
+	b.ar.HandleFunc("/task/{id:[a-f0-9-]+}", taskHandler.UpdateTask).Methods(http.MethodPut)
 }

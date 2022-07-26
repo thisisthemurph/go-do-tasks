@@ -78,3 +78,51 @@ func (t *Tasks) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	api.Respond(created, http.StatusCreated, w)
 }
+
+func (t *Tasks) UpdateTask(w http.ResponseWriter, r *http.Request) {
+	taskDto, err := getDtoFromJSONBody[dto.UpdateTaskDto](w, r)
+	if err != nil {
+		t.log.Error("Error getting Dto from JSON body: ", err)
+		return
+	}
+
+	user := getUserFromContext(r.Context())
+	taskId, _ := getParamFomRequest(r, "id")
+
+	// Fetch the task from the database
+	task, err := t.taskService.GetTaskById(taskId, user.AccountId)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTaskNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	// Update the fetched task
+	task.Name = taskDto.Name
+	task.Description = taskDto.Description
+	task.Type = taskDto.Type
+	task.Status = taskDto.Status
+
+	if len(taskDto.StoryId) > 0 {
+		task.StoryId = taskDto.StoryId
+	}
+
+	updated, err := t.taskService.UpdateTask(task)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTaskNotUpdated:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond(updated, http.StatusOK, w)
+}

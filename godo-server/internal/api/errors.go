@@ -23,6 +23,7 @@ var (
 var (
 	ErrorTaskNotFound   = errors.New("the requested task could not be found")
 	ErrorTaskNotCreated = errors.New("could not create the required task")
+	ErrorTaskNotUpdated = errors.New("could not update the specific task")
 )
 
 var (

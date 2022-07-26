@@ -26,10 +26,14 @@ func (s Story) String() string {
 	return fmt.Sprintf("Story{Name=%v}", s.Name)
 }
 
-func (s Story) AfterFind(tx *gorm.DB) {
+func (s *Story) AfterFind(tx *gorm.DB) {
 	s.StatusValue = s.Status.String()
 }
 
-func (s Story) AfterCreate(tx *gorm.DB) {
+func (s *Story) AfterCreate(tx *gorm.DB) {
+	s.StatusValue = s.Status.String()
+}
+
+func (s *Story) AfterSave(tx *gorm.DB) {
 	s.StatusValue = s.Status.String()
 }

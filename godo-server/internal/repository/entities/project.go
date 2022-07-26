@@ -34,3 +34,7 @@ func (s *Project) AfterFind(tx *gorm.DB) {
 func (s *Project) AfterCreate(tx *gorm.DB) {
 	s.StatusValue = s.Status.String()
 }
+
+func (s *Project) AfterSave(tx *gorm.DB) {
+	s.StatusValue = s.Status.String()
+}

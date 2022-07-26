@@ -12,6 +12,7 @@ type TaskService interface {
 	GetTasks(accountId string) (entities.TaskList, error)
 	GetTaskById(taskId, accountId string) (*entities.Task, error)
 	CreateTask(newTask entities.Task) (*entities.Task, error)
+	UpdateTask(newTask *entities.Task) (*entities.Task, error)
 }
 
 type taskService struct {
@@ -36,7 +37,7 @@ func (t *taskService) GetTasks(accountId string) (entities.TaskList, error) {
 func (t *taskService) GetTaskById(taskId, accountId string) (*entities.Task, error) {
 	task, err := t.query.GetTaskById(taskId, accountId)
 	if err != nil {
-		t.log.Debugf("Task with projectId %s and accountId %s not founc", taskId, accountId)
+		t.log.Debugf("Task with projectId %s and accountId %s not found", taskId, accountId)
 		return nil, api.ErrorTaskNotFound
 	}
 
@@ -52,4 +53,13 @@ func (t *taskService) CreateTask(newTask entities.Task) (*entities.Task, error) 
 	}
 
 	return &created, nil
+}
+
+func (t *taskService) UpdateTask(newTask *entities.Task) (*entities.Task, error) {
+	updated, err := t.query.UpdateTask(newTask)
+	if err != nil {
+		return nil, api.ErrorTaskNotUpdated
+	}
+
+	return updated, nil
 }
