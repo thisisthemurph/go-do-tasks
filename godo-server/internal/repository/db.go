@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"godo/internal/config"
+	"godo/internal/configuration"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 
@@ -22,7 +22,7 @@ func GetDatabase(logger ilog.StdLogger) *gorm.DB {
 }
 
 func connect(logger ilog.StdLogger) *gorm.DB {
-	configuration := config.LoadConfig(logger)
+	configuration := configuration.LoadConfig(logger)
 	connectionString := makeConnectionString(configuration)
 
 	db, err := gorm.Open("postgres", connectionString)
@@ -34,7 +34,7 @@ func connect(logger ilog.StdLogger) *gorm.DB {
 	return db
 }
 
-func makeConnectionString(config config.Config) string {
+func makeConnectionString(config configuration.Config) string {
 	return fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.DatabaseHost,

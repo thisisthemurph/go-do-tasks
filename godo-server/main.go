@@ -7,7 +7,7 @@ import (
 	"godo/internal/api/handler"
 	"godo/internal/api/middleware"
 	"godo/internal/api/services"
-	"godo/internal/config"
+	"godo/internal/configuration"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 
@@ -23,15 +23,15 @@ func main() {
 	configLogger := makeLoggerWithTag("Config")
 	daoLogger := makeLoggerWithTag("DAO")
 
-	c := config.LoadConfig(configLogger)
+	config := configuration.LoadConfig(configLogger)
 	repository.CreateAndPopulateDatabase(logger)
 
 	dao := repository.NewDAO(daoLogger)
-	servicesCollection := buildServices(dao, c)
+	servicesCollection := buildServices(dao, config)
 	router := buildRouter(servicesCollection, logger)
 
 	srv := &http.Server{
-		Addr:         "0.0.0.0:" + c.ApiPort,
+		Addr:         "0.0.0.0:" + config.ApiPort,
 		WriteTimeout: time.Second * 15,
 		IdleTimeout:  time.Second * 15,
 		Handler:      cors.Default().Handler(router),
@@ -58,7 +58,7 @@ type MiddlewareCollection struct {
 	Project middleware.ProjectMiddleware
 }
 
-func buildServices(dao repository.DAO, config config.Config) ServicesCollection {
+func buildServices(dao repository.DAO, config configuration.Config) ServicesCollection {
 	// Make loggers with the specific required parameters
 	authServiceLogger := makeLoggerWithTag("AuthService")
 	accountServiceLogger := makeLoggerWithTag("AccountService")

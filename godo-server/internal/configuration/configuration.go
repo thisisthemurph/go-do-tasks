@@ -1,4 +1,4 @@
-package config
+package configuration
 
 import (
 	"godo/internal/helper/ilog"
@@ -21,11 +21,11 @@ func LoadDevConfig(logger ilog.StdLogger) (conf Config) {
 }
 
 func LoadConfig(logger ilog.StdLogger) (conf Config) {
-	return makeConfig("config", logger)
+	return makeConfig("configuration", logger)
 }
 
 func makeConfig(configName string, log ilog.StdLogger) (conf Config) {
-	viper.SetConfigName("config")
+	viper.SetConfigName("configuration")
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("../..")
