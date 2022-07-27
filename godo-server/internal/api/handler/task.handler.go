@@ -79,6 +79,8 @@ func (t *Tasks) CreateTask(w http.ResponseWriter, r *http.Request) {
 	api.Respond(created, http.StatusCreated, w)
 }
 
+// UpdateTask TODO: Remove deduplication of error handling in update
+// methods and other functions in the handlers
 func (t *Tasks) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskDto, err := getDtoFromJSONBody[dto.UpdateTaskDto](w, r)
 	if err != nil {
@@ -125,4 +127,84 @@ func (t *Tasks) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.Respond(updated, http.StatusOK, w)
+}
+
+func (t *Tasks) UpdateTaskStatus(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromContext(r.Context())
+	taskId, _ := getParamFomRequest(r, "id")
+
+	taskDto, err := getDtoFromJSONBody[dto.UpdateTaskStatusDto](w, r)
+	if err != nil {
+		api.ReturnError(err, http.StatusBadRequest, w)
+		return
+	}
+
+	// Get the task from the database
+	task, err := t.taskService.GetTaskById(taskId, user.AccountId)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTaskNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	// Update the task
+	task.Status = taskDto.Status
+	t.taskService.UpdateTask(task)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTaskNotUpdated:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond(task, http.StatusOK, w)
+}
+
+func (t *Tasks) UpdateTaskType(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromContext(r.Context())
+	taskId, _ := getParamFomRequest(r, "id")
+
+	taskDto, err := getDtoFromJSONBody[dto.UpdateTaskTypeDto](w, r)
+	if err != nil {
+		api.ReturnError(err, http.StatusBadRequest, w)
+		return
+	}
+
+	// Get the task from the database
+	task, err := t.taskService.GetTaskById(taskId, user.AccountId)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTaskNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	// Update the task
+	task.Type = taskDto.Type
+	t.taskService.UpdateTask(task)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTaskNotUpdated:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond(task, http.StatusOK, w)
 }
