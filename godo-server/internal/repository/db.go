@@ -50,8 +50,7 @@ func dropAllTables(db *gorm.DB) {
 	db.DropTableIfExists(&entities.Project{})
 	db.DropTableIfExists(&entities.Story{})
 	db.DropTableIfExists(&entities.Task{})
-	db.DropTableIfExists("task_tags")
-
+	db.DropTableIfExists(&entities.Tag{})
 }
 
 func migrate(db *gorm.DB) {
@@ -60,6 +59,7 @@ func migrate(db *gorm.DB) {
 	db.AutoMigrate(&entities.Project{})
 	db.AutoMigrate(&entities.Story{})
 	db.AutoMigrate(&entities.Task{})
+	db.AutoMigrate(&entities.Tag{})
 }
 
 func populateTestData(db *gorm.DB) {
