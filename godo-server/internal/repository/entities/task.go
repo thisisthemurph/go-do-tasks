@@ -18,6 +18,7 @@ type Task struct {
 	Story       Story                `json:"-"`
 	CreatorId   uint                 `json:"-"`
 	Creator     User                 `json:"creator" gorm:"foreignKey:CreatorId"`
+	Tags        []Tag                `json:"tags" gorm:"many2many:task_tags"`
 
 	TimestampBase
 }
