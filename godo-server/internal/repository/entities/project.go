@@ -16,6 +16,7 @@ type Project struct {
 	CreatorId   uint                `json:"-"`
 	Creator     User                `json:"creator" gorm:"foreignKey:CreatorId"`
 	Stories     []Story             `json:"stories"`
+	Tags        []Tag               `json:"tags"`
 
 	TimestampBase
 }

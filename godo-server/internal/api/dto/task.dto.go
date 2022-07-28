@@ -19,3 +19,11 @@ type UpdateTaskDto struct {
 	Status      enums.ProgressStatus `json:"status"`
 	StoryId     string               `json:"story_id"`
 }
+
+type UpdateTaskStatusDto struct {
+	Status enums.ProgressStatus `json:"status"`
+}
+
+type UpdateTaskTypeDto struct {
+	Type enums.TaskType `json:"type"`
+}
