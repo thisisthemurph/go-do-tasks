@@ -33,3 +33,9 @@ var (
 	ErrorStoryNotDeleted = errors.New("the story could not be deleted")
 	ErrorStoryJsonParse  = errors.New("could not process the given story")
 )
+
+var (
+	ErrorTagNotFound   = errors.New("the specified tag could not be found")
+	ErrorTagNotCreated = errors.New("the tag could not be created")
+	ErrorTagNotUpdated = errors.New("the tag could not be updated")
+)
