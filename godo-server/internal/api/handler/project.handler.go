@@ -1,21 +1,32 @@
 package handler
 
 import (
+	"errors"
 	"godo/internal/api"
 	"godo/internal/api/dto"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 	"net/http"
+	"strconv"
 )
 
 type Projects struct {
 	log            ilog.StdLogger
 	projectService services.ProjectService
+	tagService     services.TagService
 }
 
-func NewProjectsHandler(logger ilog.StdLogger, projectService services.ProjectService) Projects {
-	return Projects{log: logger, projectService: projectService}
+func NewProjectsHandler(
+	logger ilog.StdLogger,
+	projectService services.ProjectService,
+	tagService services.TagService) Projects {
+
+	return Projects{
+		log:            logger,
+		projectService: projectService,
+		tagService:     tagService,
+	}
 }
 
 func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +87,7 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create the newProject
+	// Create the new Project
 	newProject := entities.Project{
 		Name:        projectDto.Name,
 		Description: projectDto.Description,
@@ -122,6 +133,59 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	default:
 		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond("", http.StatusNoContent, w)
+}
+
+// AddTagToProject TODO: Ensure project doesn't already have a tag with the same name
+func (p *Projects) AddTagToProject(w http.ResponseWriter, r *http.Request) {
+	projId, _ := getParamFomRequest(r, "id")
+	tagDto, err := getDtoFromJSONBody[dto.NewTagDto](w, r)
+	if err != nil {
+		p.log.Error("Error getting Dto from JSON body: ", err)
+		return
+	}
+
+	// Create the new tag
+	var tag entities.Tag
+	tag.Name = tagDto.Name
+	tag.ProjectId = projId
+
+	_, err = p.tagService.CreateTag(tag)
+	if err != nil {
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond("", http.StatusNoContent, w)
+}
+
+func (p *Projects) UpdateProjectTag(w http.ResponseWriter, r *http.Request) {
+	tagIdValue, _ := getParamFomRequest(r, "tagId")
+	tagId, err := strconv.ParseUint(tagIdValue, 10, 32)
+	if err != nil {
+		p.log.Error(err)
+		api.ReturnError(errors.New("tagId is not an appropriate number"), http.StatusBadRequest, w)
+		return
+	}
+
+	projId, _ := getParamFomRequest(r, "projectId")
+
+	tagDto, err := getDtoFromJSONBody[dto.NewTagDto](w, r)
+	if err != nil {
+		p.log.Error("Error getting Dto from JSON body: ", err)
+		return
+	}
+
+	// Get the tag from the database
+	tag, err := p.tagService.GetTagById(uint(tagId), projId)
+	tag.Name = tagDto.Name
+
+	_, err = p.tagService.UpdateTag(*tag)
+	if err != nil {
+		api.ReturnError(api.ErrorTagNotUpdated, http.StatusInternalServerError, w)
 		return
 	}
 
