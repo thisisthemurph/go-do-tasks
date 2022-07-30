@@ -9,7 +9,7 @@ type StoryQuery interface {
 	CreateStory(newStory *entities.Story) (*entities.Story, error)
 	DeleteStory(storyId string) error
 	Exists(storyId string) bool
-	GetAllStories(accountId string) ([]*entities.Story, error)
+	GetStoriesInfo(accountId string) (entities.StoryInfoList, error)
 	GetStoryById(accountId, storyId string) (*entities.Story, error)
 	UpdateStory(newStory *entities.Story) error
 }
@@ -24,22 +24,27 @@ func (d *dao) NewStoryQuery(logger ilog.StdLogger) StoryQuery {
 	}
 }
 
-func (q *storyQuery) GetAllStories(accountId string) ([]*entities.Story, error) {
-	q.log.Debugf("Fetching all stories with accountId %s", accountId)
+func (q *storyQuery) GetStoriesInfo(accountId string) (entities.StoryInfoList, error) {
+	q.log.Debugf("Fetching all story info for Account{id=%s}", accountId)
 
-	var stories []*entities.Story
-	result := Database.
-		Preload("Creator", "account_id = ?", accountId).
-		Joins("JOIN users on stories.creator_id = users.id").
+	var info entities.StoryInfoList
+	r := Database.
+		Table("stories").
+		Select("stories.id, stories.name, stories.description, stories.status, stories.created_at, "+
+			"stories.updated_at, count(tasks.id) task_count").
+		Joins("LEFT JOIN users ON users.account_id = ?", accountId).
+		Joins("LEFT JOIN tasks ON stories.id = tasks.story_id").
 		Where("users.account_id = ?", accountId).
-		Find(&stories)
+		Group("stories.id").
+		Order("stories.created_at DESC").
+		Find(&info)
 
-	ilog.ErrorlnIf(result.Error, q.log)
-	return stories, result.Error
+	ilog.ErrorlnIf(r.Error, q.log)
+	return info, r.Error
 }
 
 func (q *storyQuery) GetStoryById(accountId, storyId string) (*entities.Story, error) {
-	q.log.Debugf("Fetching story with accountId %s and storyId %s", accountId, storyId)
+	q.log.Debugf("Fetching story with Account{id=%s} & Story{id=%s}", accountId, storyId)
 
 	story := entities.Story{}
 	result := Database.
@@ -53,7 +58,7 @@ func (q *storyQuery) GetStoryById(accountId, storyId string) (*entities.Story, e
 }
 
 func (q *storyQuery) CreateStory(newStory *entities.Story) (*entities.Story, error) {
-	q.log.Debugf("Creating story with name %s", newStory.Name)
+	q.log.Debugf("Creating Story{name=%s}", newStory.Name)
 
 	result := Database.Create(&newStory)
 	ilog.ErrorlnIf(result.Error, q.log)
@@ -62,7 +67,7 @@ func (q *storyQuery) CreateStory(newStory *entities.Story) (*entities.Story, err
 }
 
 func (q *storyQuery) Exists(storyId string) bool {
-	q.log.Debugf("Checking if story with storyId %s exists", storyId)
+	q.log.Debugf("Checking if Story{id=%s} exists", storyId)
 
 	var story entities.Story
 	r := Database.First(&story, "id = ?", storyId)
@@ -72,7 +77,7 @@ func (q *storyQuery) Exists(storyId string) bool {
 }
 
 func (q *storyQuery) UpdateStory(story *entities.Story) error {
-	q.log.Debugf("Updating story with storyId %s", story.ID)
+	q.log.Debugf("Updating Story{id=%s}", story.ID)
 
 	r := Database.Save(&story)
 	ilog.ErrorlnIf(r.Error, q.log)
@@ -81,7 +86,7 @@ func (q *storyQuery) UpdateStory(story *entities.Story) error {
 }
 
 func (q *storyQuery) DeleteStory(storyId string) error {
-	q.log.Infof("Deleting story with storyId %s", storyId)
+	q.log.Debugf("Deleting Story{id=%s}", storyId)
 
 	var deletedStory entities.Story
 	r := Database.Where("id = ?", storyId).Delete(&deletedStory)
@@ -91,7 +96,7 @@ func (q *storyQuery) DeleteStory(storyId string) error {
 }
 
 func (q *storyQuery) getStoryByIdOnly(storyId string) (*entities.Story, error) {
-	q.log.Infof("Fetching story with storyId %s", storyId)
+	q.log.Debugf("Fetching Story{id=%s}", storyId)
 
 	var story entities.Story
 	r := Database.First(&story, "id = ?", storyId)

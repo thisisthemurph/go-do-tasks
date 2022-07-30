@@ -30,7 +30,7 @@ func (q *projectQuery) GetProjectsInfo(accountId string) (entities.ProjectInfoLi
 	r := Database.
 		Table("projects").
 		Select("projects.id, projects.name, projects.description, projects.status, "+
-			"projects.created_at, projects.updated_at, count(stories.id) stories_count, count(tags.id) tags_count").
+			"projects.created_at, projects.updated_at, count(stories.id) story_count, count(tags.id) tag_count").
 		Joins("LEFT JOIN users ON users.account_id = ?", accountId).
 		Joins("LEFT JOIN stories ON projects.id = stories.project_id").
 		Joins("LEFT JOIN tags ON projects.id = tags.project_id").

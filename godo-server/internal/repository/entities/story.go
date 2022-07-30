@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"godo/internal/repository/enums"
+	"time"
 )
 
 type Story struct {
@@ -35,5 +36,23 @@ func (s *Story) AfterCreate(tx *gorm.DB) {
 }
 
 func (s *Story) AfterSave(tx *gorm.DB) {
+	s.StatusValue = s.Status.String()
+}
+
+type StoryInfo struct {
+	Base
+
+	Name        string               `json:"name" validate:"required,min=1,max=40"`
+	Description string               `json:"description" validate:"max=280"`
+	Status      enums.ProgressStatus `json:"-"`
+	StatusValue string               `json:"status"`
+	TaskCount   uint16               `json:"task_count"`
+	CreatedAt   time.Time            `json:"created_at"`
+	UpdatedAt   time.Time            `json:"updated_at"`
+}
+
+type StoryInfoList []*StoryInfo
+
+func (s *StoryInfo) AfterFind(tx *gorm.DB) {
 	s.StatusValue = s.Status.String()
 }

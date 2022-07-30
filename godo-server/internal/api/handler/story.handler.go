@@ -31,16 +31,16 @@ func NewStoriesHandler(
 	}
 }
 
-func (s *Stories) GetAllStories(w http.ResponseWriter, r *http.Request) {
+func (s *Stories) GetStoriesInfo(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
-	stories, err := s.storyService.GetStories(user.AccountId)
+	info, err := s.storyService.GetStoriesInfo(user.AccountId)
 	if err != nil {
 		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 
-	api.Respond(stories, http.StatusOK, w)
+	api.Respond(info, http.StatusOK, w)
 }
 
 func (s *Stories) GetStoryById(w http.ResponseWriter, r *http.Request) {

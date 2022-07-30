@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	ehand "godo/internal/api/errorhandler"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
@@ -9,7 +8,7 @@ import (
 )
 
 type StoryService interface {
-	GetStories(accountId string) ([]*entities.Story, error)
+	GetStoriesInfo(accountId string) (entities.StoryInfoList, error)
 	GetStoryById(accountId, storyId string) (*entities.Story, error)
 	CreateStory(newStory *entities.Story) (*entities.Story, error)
 	UpdateStory(storyId string, newStoryData *entities.Story) error
@@ -28,14 +27,14 @@ func NewStoryService(storyQuery repository.StoryQuery, log ilog.StdLogger) Story
 	}
 }
 
-func (s *storyService) GetStories(accountId string) ([]*entities.Story, error) {
-	stories, err := s.query.GetAllStories(accountId)
+func (s *storyService) GetStoriesInfo(accountId string) (entities.StoryInfoList, error) {
+	info, err := s.query.GetStoriesInfo(accountId)
 	if err != nil {
-		s.log.Infof("Error fetching stories from database: ", err.Error())
-		return nil, errors.New("no stories present in the database")
+		s.log.Error("error fetching info from database: ", err)
+		return nil, err
 	}
 
-	return stories, nil
+	return info, nil
 }
 
 func (s *storyService) GetStoryById(accountId, storyId string) (*entities.Story, error) {

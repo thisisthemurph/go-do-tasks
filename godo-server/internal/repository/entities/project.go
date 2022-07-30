@@ -44,14 +44,14 @@ func (s *Project) AfterSave(tx *gorm.DB) {
 type ProjectInfo struct {
 	Base
 
-	Name         string              `json:"name" validate:"required,min=1,max=40"`
-	Description  string              `json:"description" validate:"max=280"`
-	Status       enums.ProjectStatus `json:"-" validate:"gte=0"`
-	StatusValue  string              `json:"status"`
-	StoriesCount uint16              `json:"stories_count"`
-	TagsCount    uint16              `json:"tags_count"`
-	CreatedAt    time.Time           `json:"created_at"`
-	UpdatedAt    time.Time           `json:"updated_at"`
+	Name        string              `json:"name" validate:"required,min=1,max=40"`
+	Description string              `json:"description" validate:"max=280"`
+	Status      enums.ProjectStatus `json:"-" validate:"gte=0"`
+	StatusValue string              `json:"status"`
+	StoryCount  uint16              `json:"story_count"`
+	TagCount    uint16              `json:"tag_count"`
+	CreatedAt   time.Time           `json:"created_at"`
+	UpdatedAt   time.Time           `json:"updated_at"`
 }
 
 type ProjectInfoList []*ProjectInfo

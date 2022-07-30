@@ -82,7 +82,7 @@ func (b *routerBuilder) buildStoryRouter() {
 	storyLogger := ilog.MakeLoggerWithTag("StoryHandler")
 	storyHandler := handler.NewStoriesHandler(storyLogger, b.sc.storyService, b.sc.projectService)
 
-	b.Get("/story", storyHandler.GetAllStories)
+	b.Get("/story", storyHandler.GetStoriesInfo)
 	b.Get("/story", storyHandler.CreateStory)
 	b.Get("/story/{id:[a-f0-9-]+}", storyHandler.GetStoryById)
 	b.Put("/story/{id:[a-f0-9-]+}", storyHandler.UpdateStory)
