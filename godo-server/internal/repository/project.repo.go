@@ -72,7 +72,6 @@ func (q *projectQuery) CreateProject(newProject *entities.Project) (*entities.Pr
 	return newProject, response.Error
 }
 
-// UpdateProject TODO: Remove duplicate query
 func (q *projectQuery) UpdateProject(projectId string, newProject *entities.Project) error {
 	q.log.Debugf("Updating Project{id=%s}", projectId)
 

@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/go-playground/validator"
 	"godo/internal/repository/enums"
 )
 
@@ -12,10 +11,4 @@ type NewProjectDto struct {
 
 type ProjectStatusUpdateDto struct {
 	Status enums.ProjectStatus `json:"status" validate:"required,gte=0"`
-}
-
-// Validate TODO: Generalise the validation method
-func (np *NewProjectDto) Validate() error {
-	validate := validator.New()
-	return validate.Struct(np)
 }

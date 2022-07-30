@@ -6,6 +6,7 @@ import (
 	"godo/internal/api"
 	"godo/internal/api/dto"
 	"godo/internal/helper/ilog"
+	"godo/internal/helper/validate"
 	"net/http"
 )
 
@@ -28,7 +29,7 @@ func (m *ProjectMiddleware) ValidateNewProjectDtoMiddleware(next http.Handler) h
 			return
 		}
 
-		err = projectDto.Validate()
+		err = validate.Struct(projectDto)
 		if err != nil {
 			m.log.Errorf("The Project failed validation: %s", err)
 

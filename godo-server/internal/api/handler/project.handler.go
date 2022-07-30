@@ -7,6 +7,7 @@ import (
 	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
+	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"net/http"
 	"strconv"
@@ -74,7 +75,7 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
 	// Validate the project looks OK
-	err = projectDto.Validate()
+	err = validate.Struct(projectDto)
 	if err != nil {
 		p.log.Debug(err)
 		api.ReturnError(err, http.StatusBadRequest, w)
