@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"godo/internal/api"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
@@ -30,7 +30,7 @@ func (t *tagService) GetTagById(tagId uint, projectId string) (*entities.Tag, er
 	tag, err := t.query.GetTagById(tagId, projectId)
 	if err != nil {
 		t.log.Debugf("Tag with tagId %d not found", tagId)
-		return nil, api.ErrorTagNotFound
+		return nil, ehand.ErrorTagNotFound
 	}
 
 	return tag, nil
@@ -41,7 +41,7 @@ func (t *tagService) CreateTag(newTag entities.Tag) (*entities.Tag, error) {
 
 	if err != nil {
 		t.log.Infof("Could not create Tag: ", err)
-		return nil, api.ErrorTagNotCreated
+		return nil, ehand.ErrorTagNotCreated
 	}
 
 	return created, nil
@@ -50,7 +50,7 @@ func (t *tagService) CreateTag(newTag entities.Tag) (*entities.Tag, error) {
 func (t *tagService) UpdateTag(newTag entities.Tag) (*entities.Tag, error) {
 	updated, err := t.query.UpdateTag(newTag)
 	if err != nil {
-		return nil, api.ErrorTagNotUpdated
+		return nil, ehand.ErrorTagNotUpdated
 	}
 
 	return updated, nil
@@ -74,7 +74,7 @@ func (t *tagService) DeleteTag(tagId uint, projectId string) (*entities.Tag, err
 func (t *tagService) AddToTask(tagId uint, taskId string) error {
 	exists := t.query.Exists(tagId)
 	if !exists {
-		return api.ErrorTagNotFound
+		return ehand.ErrorTagNotFound
 	}
 
 	err := t.query.AddTagToTask(taskId, tagId)
@@ -88,7 +88,7 @@ func (t *tagService) AddToTask(tagId uint, taskId string) error {
 func (t *tagService) RemoveFromTask(taskId string, tagId uint) error {
 	exists := t.query.Exists(tagId)
 	if !exists {
-		return api.ErrorTagNotFound
+		return ehand.ErrorTagNotFound
 	}
 
 	err := t.query.RemoveTagFromTask(taskId, tagId)

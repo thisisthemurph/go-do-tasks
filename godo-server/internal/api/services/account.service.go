@@ -1,7 +1,7 @@
 package services
 
 import (
-	"godo/internal/api"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
@@ -33,14 +33,14 @@ func (a *accountService) CreateAccount(newAccount *entities.Account) (*entities.
 	}
 
 	if exists {
-		return nil, api.ErrorAccountAlreadyExists
+		return nil, ehand.ErrorAccountAlreadyExists
 	}
 
 	account, err := a.query.CreateAccount(newAccount)
 
 	if err != nil {
 		a.log.Error("Issue creating Account: ", err)
-		return nil, api.ErrorAccountNotCreated
+		return nil, ehand.ErrorAccountNotCreated
 	}
 
 	return account, nil

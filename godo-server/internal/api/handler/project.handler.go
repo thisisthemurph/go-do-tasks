@@ -3,6 +3,8 @@ package handler
 import (
 	"godo/internal/api"
 	"godo/internal/api/dto"
+	"godo/internal/api/errorhandler"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
@@ -14,6 +16,7 @@ type Projects struct {
 	log            ilog.StdLogger
 	projectService services.ProjectService
 	tagService     services.TagService
+	eh             errorhandler.ErrorHandler
 }
 
 func NewProjectsHandler(
@@ -25,6 +28,7 @@ func NewProjectsHandler(
 		log:            logger,
 		projectService: projectService,
 		tagService:     tagService,
+		eh:             errorhandler.New(),
 	}
 }
 
@@ -33,7 +37,6 @@ func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 	user = r.Context().Value(entities.UserKey{}).(entities.User)
 
 	projects, err := p.projectService.GetProjects(user.AccountId)
-
 	if err != nil {
 		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
@@ -52,15 +55,7 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	project, err := p.projectService.GetProjectById(projectId, user.AccountId)
-
-	switch err {
-	case nil:
-		break
-	case api.ErrorProjectNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := p.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -94,15 +89,7 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	createdProject, err := p.projectService.CreateProject(&newProject)
-
-	switch err {
-	case nil:
-		break
-	case api.ErrorProjectNotCreated:
-		api.ReturnError(err, http.StatusInternalServerError, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := p.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -117,21 +104,13 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	err := api.FromJSON(&newProjectData, r.Body)
 	if err != nil {
 		p.log.Error("Could not process Project from request body: ", err)
-		api.ReturnError(api.ErrorProjectJSONParse, http.StatusBadRequest, w)
+		api.ReturnError(ehand.ErrorProjectJSONParse, http.StatusBadRequest, w)
 		return
 	}
 
 	// Update the project
 	err = p.projectService.UpdateProject(projectId, newProjectData)
-
-	switch err {
-	case nil:
-		break
-	case api.ErrorProjectNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := p.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -167,7 +146,7 @@ func (p *Projects) UpdateProjectTag(w http.ResponseWriter, r *http.Request) {
 	tagId, err := strconv.ParseUint(tagIdValue, 10, 32)
 	if err != nil {
 		p.log.Error(err)
-		api.ReturnError(api.ErrorTagMalformedId, http.StatusBadRequest, w)
+		api.ReturnError(ehand.ErrorTagMalformedId, http.StatusBadRequest, w)
 		return
 	}
 
@@ -183,7 +162,7 @@ func (p *Projects) UpdateProjectTag(w http.ResponseWriter, r *http.Request) {
 
 	_, err = p.tagService.UpdateTag(*tag)
 	if err != nil {
-		api.ReturnError(api.ErrorTagNotUpdated, http.StatusInternalServerError, w)
+		api.ReturnError(ehand.ErrorTagNotUpdated, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -195,14 +174,7 @@ func (p *Projects) DeleteProjectTag(w http.ResponseWriter, r *http.Request) {
 	tagId, _ := getUintParamFomRequest(r, "tagId")
 
 	_, err := p.tagService.DeleteTag(tagId, projId)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTagNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := p.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -224,7 +196,7 @@ func (p *Projects) UpdateProjectStatus(w http.ResponseWriter, r *http.Request) {
 	project, err := p.projectService.GetProjectById(projectId, user.AccountId)
 	if err != nil {
 		p.log.Debugf("Could not find project with projectId %s and accountId %s", projectId, user.AccountId)
-		api.ReturnError(api.ErrorProjectNotFound, http.StatusNotFound, w)
+		api.ReturnError(ehand.ErrorProjectNotFound, http.StatusNotFound, w)
 		return
 	}
 
@@ -233,7 +205,7 @@ func (p *Projects) UpdateProjectStatus(w http.ResponseWriter, r *http.Request) {
 	err = p.projectService.UpdateProject(projectId, project)
 	if err != nil {
 		p.log.Debugf("Could not update with projectId %s and accountId %s", projectId, user.AccountId)
-		api.ReturnError(api.ErrorProjectNotFound, http.StatusNotFound, w)
+		api.ReturnError(ehand.ErrorProjectNotFound, http.StatusNotFound, w)
 		return
 	}
 
@@ -245,15 +217,7 @@ func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
 
 	// Delete the project
 	err := p.projectService.DeleteProject(projectId)
-
-	switch err {
-	case nil:
-		break
-	case api.ErrorProjectNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := p.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 

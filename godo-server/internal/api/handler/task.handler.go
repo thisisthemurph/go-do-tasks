@@ -3,6 +3,7 @@ package handler
 import (
 	"godo/internal/api"
 	"godo/internal/api/dto"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
 	"godo/internal/helper/validate"
@@ -14,21 +15,27 @@ type Tasks struct {
 	log         ilog.StdLogger
 	taskService services.TaskService
 	tagService  services.TagService
+	eh          ehand.ErrorHandler
 }
 
 func NewTasksHandler(
 	logger ilog.StdLogger,
 	taskService services.TaskService,
 	tagService services.TagService) Tasks {
-	return Tasks{log: logger, taskService: taskService, tagService: tagService}
+
+	return Tasks{
+		log:         logger,
+		taskService: taskService,
+		tagService:  tagService,
+		eh:          ehand.New(),
+	}
 }
 
 func (t *Tasks) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
 	tasks, err := t.taskService.GetTasks(user.AccountId)
-	if err != nil {
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -40,8 +47,7 @@ func (t *Tasks) GetTaskById(w http.ResponseWriter, r *http.Request) {
 	taskId, _ := getParamFomRequest(r, "id")
 
 	task, err := t.taskService.GetTaskById(taskId, user.AccountId)
-	if err != nil {
-		api.ReturnError(api.ErrorTaskNotFound, http.StatusNotFound, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -75,8 +81,7 @@ func (t *Tasks) CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	created, err := t.taskService.CreateTask(newTask)
-	if err != nil {
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -97,14 +102,7 @@ func (t *Tasks) UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch the task from the database
 	task, err := t.taskService.GetTaskById(taskId, user.AccountId)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTaskNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -119,14 +117,7 @@ func (t *Tasks) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updated, err := t.taskService.UpdateTask(task)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTaskNotUpdated:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -145,28 +136,14 @@ func (t *Tasks) UpdateTaskStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Get the task from the database
 	task, err := t.taskService.GetTaskById(taskId, user.AccountId)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTaskNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
 	// Update the task
 	task.Status = taskDto.Status
 	updated, err := t.taskService.UpdateTask(task)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTaskNotUpdated:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -185,28 +162,14 @@ func (t *Tasks) UpdateTaskType(w http.ResponseWriter, r *http.Request) {
 
 	// Get the task from the database
 	task, err := t.taskService.GetTaskById(taskId, user.AccountId)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTaskNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
 	// Update the task
 	task.Type = taskDto.Type
 	updated, err := t.taskService.UpdateTask(task)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTaskNotUpdated:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -221,27 +184,13 @@ func (t *Tasks) AddTag(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure that the task exists for the user's account
 	_, err := t.taskService.GetTaskById(taskId, user.AccountId)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTaskNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
 	// Add the tag to the task in the database
 	err = t.tagService.AddToTask(tagId, taskId)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTagNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -256,27 +205,13 @@ func (t *Tasks) RemoveTag(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure that the task exists for the user's account
 	_, err := t.taskService.GetTaskById(taskId, user.AccountId)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTaskNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
 	// Add the tag to the task in the database
 	err = t.tagService.RemoveFromTask(taskId, tagId)
-	switch err {
-	case nil:
-		break
-	case api.ErrorTagNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := t.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 

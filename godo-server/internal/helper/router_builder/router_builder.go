@@ -68,6 +68,7 @@ func (b *routerBuilder) buildProjectRouter() {
 	b.Post("/project", projectHandler.CreateProject)
 	b.Get("/project", projectHandler.GetAllProjects)
 	b.Get("/project/{id:[a-f0-9-]+}", projectHandler.GetProjectById)
+	b.Delete("/project/{id:[a-f0-9-]+}", projectHandler.DeleteProject)
 
 	// Status
 	b.Put("/project/{id:[a-f0-9-]+}/status", projectHandler.UpdateProjectStatus)

@@ -1,6 +1,35 @@
-package api
+package errorhandler
 
-import "errors"
+import (
+	"errors"
+	"net/http"
+)
+
+func makeErrorMap() map[error]int {
+	return map[error]int{
+		ErrorAccountNotFound:      http.StatusNotFound,
+		ErrorAccountNotCreated:    http.StatusInternalServerError,
+		ErrorAccountAlreadyExists: http.StatusBadRequest,
+		ErrorUserNotFound:         http.StatusNotFound,
+		ErrorUserAlreadyExists:    http.StatusBadRequest,
+		ErrorUserAuthentication:   http.StatusUnauthorized,
+		ErrorProjectNotFound:      http.StatusNotFound,
+		ErrorProjectNotCreated:    http.StatusInternalServerError,
+		ErrorProjectJSONParse:     http.StatusBadRequest,
+		ErrorTaskNotFound:         http.StatusNotFound,
+		ErrorTaskNotCreated:       http.StatusInternalServerError,
+		ErrorTaskNotUpdated:       http.StatusInternalServerError,
+		ErrorStoryNotFound:        http.StatusNotFound,
+		ErrorStoryNotCreated:      http.StatusInternalServerError,
+		ErrorStoryNotUpdated:      http.StatusInternalServerError,
+		ErrorStoryNotDeleted:      http.StatusInternalServerError,
+		ErrorStoryJsonParse:       http.StatusBadRequest,
+		ErrorTagNotFound:          http.StatusNotFound,
+		ErrorTagNotCreated:        http.StatusInternalServerError,
+		ErrorTagNotUpdated:        http.StatusInternalServerError,
+		ErrorTagMalformedId:       http.StatusBadRequest,
+	}
+}
 
 var (
 	ErrorAccountNotFound      = errors.New("the specified account could not be found")
