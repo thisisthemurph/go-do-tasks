@@ -13,7 +13,7 @@ type Project struct {
 	Description string              `json:"description" validate:"max=280"`
 	Status      enums.ProjectStatus `json:"-" gorm:"type:smallint;default:0;not null" validate:"gte=0"`
 	StatusValue string              `json:"status" gorm:"-:all"`
-	CreatorId   uint                `json:"-"`
+	CreatorId   uint                `json:"creator_id"`
 	Creator     User                `json:"creator" gorm:"foreignKey:CreatorId"`
 	Stories     []Story             `json:"stories"`
 	Tags        []Tag               `json:"tags"`

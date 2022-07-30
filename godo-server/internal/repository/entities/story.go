@@ -15,7 +15,7 @@ type Story struct {
 	StatusValue string               `json:"status" gorm:"-:all"`
 	ProjectId   string               `json:"project_id"`
 	Project     Project              `json:"-"`
-	CreatorId   uint                 `json:"-"`
+	CreatorId   uint                 `json:"creator_id"`
 	Creator     User                 `json:"creator" gorm:"foreignKey:CreatorId"`
 	Tasks       []Task               `json:"tasks"`
 

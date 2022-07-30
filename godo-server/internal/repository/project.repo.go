@@ -40,10 +40,15 @@ func (q *projectQuery) GetAllProjects(accountId string) ([]*entities.Project, er
 func (q *projectQuery) GetProjectById(projectId string, accountId string) (*entities.Project, error) {
 	q.log.Debugf("Fetching project with projectId %s and accountId %s", projectId, accountId)
 
-	project := entities.Project{}
+	var project entities.Project
 	result := Database.
 		Preload("Creator", "account_id = ?", accountId).
 		Preload("Stories", "stories.project_id = ?", projectId).
+		Preload("Stories.Creator").
+		Preload("Stories.Tasks").
+		Preload("Stories.Tasks.Creator").
+		Preload("Stories.Tasks.Tags").
+		Preload("Tags").
 		Joins("JOIN users on projects.creator_id = users.id").
 		Where("users.account_id = ?", accountId).
 		First(&project, "projects.id = ?", projectId)
