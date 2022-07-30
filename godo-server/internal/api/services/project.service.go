@@ -30,7 +30,7 @@ func NewProjectService(projectQuery repository.ProjectQuery, logger ilog.StdLogg
 }
 
 func (p *projectService) GetProjects(accountId string) ([]*entities.ProjectInfo, error) {
-	projects, err := p.query.GetAllProjects(accountId)
+	projects, err := p.query.GetProjectsInfo(accountId)
 
 	if err != nil {
 		p.log.Infof("Error fetching projects from the database: ", err.Error())

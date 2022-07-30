@@ -8,7 +8,7 @@ import (
 
 type ProjectQuery interface {
 	GetProjectById(projectId string, accountId string) (*entities.Project, error)
-	GetAllProjects(accountId string) (entities.ProjectInfoList, error)
+	GetProjectsInfo(accountId string) (entities.ProjectInfoList, error)
 	CreateProject(newProject *entities.Project) (*entities.Project, error)
 	UpdateProject(projectId string, newProject *entities.Project) error
 	DeleteProject(projectId string) error
@@ -23,7 +23,7 @@ func (d *dao) NewProjectQuery(logger ilog.StdLogger) ProjectQuery {
 	return &projectQuery{log: logger}
 }
 
-func (q *projectQuery) GetAllProjects(accountId string) (entities.ProjectInfoList, error) {
+func (q *projectQuery) GetProjectsInfo(accountId string) (entities.ProjectInfoList, error) {
 	q.log.Debugf("Fetching all project information associated with Account{id=%s}", accountId)
 
 	var info entities.ProjectInfoList
