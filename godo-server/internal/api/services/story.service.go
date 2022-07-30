@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"godo/internal/api"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
@@ -42,7 +42,7 @@ func (s *storyService) GetStoryById(accountId, storyId string) (*entities.Story,
 	story, err := s.query.GetStoryById(accountId, storyId)
 	if err != nil {
 		s.log.Infof("Story with accountId %s and storyId %s not found", accountId, storyId)
-		return nil, api.ErrorStoryNotFound
+		return nil, ehand.ErrorStoryNotFound
 	}
 
 	return story, err
@@ -53,7 +53,7 @@ func (s *storyService) CreateStory(newStory *entities.Story) (*entities.Story, e
 
 	if err != nil {
 		s.log.Info("Error creating Story.", err)
-		return nil, api.ErrorStoryNotCreated
+		return nil, ehand.ErrorStoryNotCreated
 	}
 
 	return createdStory, nil
@@ -66,13 +66,13 @@ func (s *storyService) Exists(storyId string) bool {
 func (s *storyService) UpdateStory(storyId string, newStoryData *entities.Story) error {
 	exists := s.Exists(storyId)
 	if !exists {
-		return api.ErrorStoryNotFound
+		return ehand.ErrorStoryNotFound
 	}
 
 	err := s.query.UpdateStory(newStoryData)
 	if err != nil {
 		s.log.Errorf("Could not update Story with storyId %s: %S", storyId, err.Error())
-		return api.ErrorStoryNotUpdated
+		return ehand.ErrorStoryNotUpdated
 	}
 
 	return nil
@@ -81,13 +81,13 @@ func (s *storyService) UpdateStory(storyId string, newStoryData *entities.Story)
 func (s *storyService) DeleteStory(storyId string) error {
 	exists := s.Exists(storyId)
 	if !exists {
-		return api.ErrorStoryNotFound
+		return ehand.ErrorStoryNotFound
 	}
 
 	err := s.query.DeleteStory(storyId)
 	if err != nil {
 		s.log.Errorf("Could not delete Story with storyId %s: %S", storyId, err.Error())
-		return api.ErrorStoryNotDeleted
+		return ehand.ErrorStoryNotDeleted
 	}
 
 	return nil

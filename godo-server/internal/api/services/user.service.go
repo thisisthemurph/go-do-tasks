@@ -1,7 +1,7 @@
 package services
 
 import (
-	"godo/internal/api"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
@@ -32,7 +32,7 @@ func (s *userService) GetUserByEmailAddress(email string) (*entities.User, error
 	}
 
 	if !exists {
-		return nil, api.ErrorUserNotFound
+		return nil, ehand.ErrorUserNotFound
 	}
 
 	var user *entities.User
@@ -47,7 +47,7 @@ func (s *userService) CreateUser(newUser entities.User) (*entities.User, error) 
 	}
 
 	if exists {
-		return nil, api.ErrorUserAlreadyExists
+		return nil, ehand.ErrorUserAlreadyExists
 	}
 
 	return s.query.CreateUser(newUser)

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"godo/internal/api"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/helper/ilog"
 	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
@@ -31,7 +31,7 @@ func (q *apiUserQuery) CreateUser(newUser entities.User) (*entities.User, error)
 
 	if result.RowsAffected >= 1 {
 		q.log.Errorf("A user already exists with the given email address: %s", newUser.Email)
-		return nil, api.ErrorUserNotFound
+		return nil, ehand.ErrorUserNotFound
 	}
 
 	// Add the discriminator to the user
@@ -65,7 +65,7 @@ func (q *apiUserQuery) GetUserByEmailAddress(email string) (*entities.User, erro
 	if err != nil {
 		q.log.Warn("There was an issue obtaining the user from the database")
 		q.log.Error(err)
-		return nil, api.ErrorUserNotFound
+		return nil, ehand.ErrorUserNotFound
 	}
 
 	return &user, nil

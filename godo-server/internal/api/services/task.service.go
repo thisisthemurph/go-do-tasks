@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"godo/internal/api"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
@@ -39,7 +39,7 @@ func (t *taskService) GetTaskById(taskId, accountId string) (*entities.Task, err
 	task, err := t.query.GetTaskById(taskId, accountId)
 	if err != nil {
 		t.log.Debugf("Task with projectId %s and accountId %s not found", taskId, accountId)
-		return nil, api.ErrorTaskNotFound
+		return nil, ehand.ErrorTaskNotFound
 	}
 
 	return &task, nil
@@ -50,7 +50,7 @@ func (t *taskService) CreateTask(newTask entities.Task) (*entities.Task, error) 
 
 	if err != nil {
 		t.log.Infof("Could not create Task: ", err)
-		return nil, api.ErrorTaskNotCreated
+		return nil, ehand.ErrorTaskNotCreated
 	}
 
 	return &created, nil
@@ -59,7 +59,7 @@ func (t *taskService) CreateTask(newTask entities.Task) (*entities.Task, error) 
 func (t *taskService) UpdateTask(newTask *entities.Task) (*entities.Task, error) {
 	updated, err := t.query.UpdateTask(newTask)
 	if err != nil {
-		return nil, api.ErrorTaskNotUpdated
+		return nil, ehand.ErrorTaskNotUpdated
 	}
 
 	return updated, nil

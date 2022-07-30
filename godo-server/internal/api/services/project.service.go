@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"godo/internal/api"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"godo/internal/repository/entities"
@@ -45,7 +45,7 @@ func (p *projectService) GetProjectById(projectId, accountId string) (*entities.
 
 	if err != nil {
 		p.log.Debugf("Project with projectId %s and accountId %s not found", projectId, accountId)
-		return nil, api.ErrorProjectNotFound
+		return nil, ehand.ErrorProjectNotFound
 	}
 
 	return project, nil
@@ -56,7 +56,7 @@ func (p *projectService) CreateProject(newProject *entities.Project) (*entities.
 
 	if err != nil {
 		p.log.Error("Could not create Project: ", err)
-		return nil, api.ErrorProjectNotCreated
+		return nil, ehand.ErrorProjectNotCreated
 	}
 
 	return createdProject, nil
@@ -70,7 +70,7 @@ func (p *projectService) UpdateProject(projectId string, newProjectData *entitie
 	projectExists := p.query.Exists(projectId)
 	if !projectExists {
 		p.log.Warnf("Project with id %s does not exist", projectId)
-		return api.ErrorProjectNotFound
+		return ehand.ErrorProjectNotFound
 	}
 
 	err := p.query.UpdateProject(projectId, newProjectData)
@@ -86,7 +86,7 @@ func (p *projectService) DeleteProject(projectId string) error {
 	projectExists := p.query.Exists(projectId)
 	if !projectExists {
 		p.log.Warnf("Project with id %s not found", projectId)
-		return api.ErrorProjectNotFound
+		return ehand.ErrorProjectNotFound
 	}
 
 	err := p.query.DeleteProject(projectId)

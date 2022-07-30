@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"godo/internal/api"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
@@ -16,6 +17,7 @@ type Users struct {
 	authService    services.AuthService
 	accountService services.AccountService
 	userService    services.UserService
+	eh             ehand.ErrorHandler
 }
 
 func NewUsersHandler(
@@ -24,7 +26,13 @@ func NewUsersHandler(
 	accountService services.AccountService,
 	userService services.UserService) *Users {
 
-	return &Users{log: logger, authService: authService, accountService: accountService, userService: userService}
+	return &Users{
+		log:            logger,
+		authService:    authService,
+		accountService: accountService,
+		userService:    userService,
+		eh:             ehand.New(),
+	}
 }
 
 type LoginRequest struct {
@@ -54,14 +62,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Does the user exist?
 	user, err := u.userService.GetUserByEmailAddress(request.Email)
-	switch err {
-	case nil:
-		break
-	case api.ErrorUserNotFound:
-		api.ReturnError(api.ErrorUserAuthentication, http.StatusUnauthorized, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := u.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -69,14 +70,13 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	err = user.VerifyPassword(request.Password)
 	if err != nil {
 		u.log.Warn("Bad authentication: incorrect password")
-		api.ReturnError(api.ErrorUserAuthentication, http.StatusUnauthorized, w)
+		api.ReturnError(ehand.ErrorUserAuthentication, http.StatusUnauthorized, w)
 		return
 	}
 
 	// Gat a token for the user
 	token, err := u.authService.GenerateJWT(user.Email, user.Username, user.AccountId)
-	if err != nil {
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := u.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -110,13 +110,12 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure the account exists
 	accountExists, err := u.accountService.AccountExists(request.AccountId)
-	if err != nil {
-		api.ReturnError(api.ErrorAccountNotCreated, http.StatusInternalServerError, w)
+	if status := u.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
 	if !accountExists {
-		api.ReturnError(api.ErrorAccountNotFound, http.StatusNotFound, w)
+		api.ReturnError(ehand.ErrorAccountNotFound, http.StatusNotFound, w)
 		return
 	}
 
@@ -131,15 +130,7 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 
 	var createdUser *entities.User
 	createdUser, err = u.userService.CreateUser(newUser)
-
-	switch err {
-	case nil:
-		break
-	case api.ErrorUserAlreadyExists:
-		api.ReturnError(err, http.StatusBadRequest, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := u.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 

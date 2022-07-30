@@ -3,6 +3,7 @@ package handler
 import (
 	"godo/internal/api"
 	"godo/internal/api/dto"
+	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
 	"godo/internal/helper/validate"
@@ -14,6 +15,7 @@ type Stories struct {
 	log            ilog.StdLogger
 	storyService   services.StoryService
 	projectService services.ProjectService
+	eh             ehand.ErrorHandler
 }
 
 func NewStoriesHandler(
@@ -25,6 +27,7 @@ func NewStoriesHandler(
 		log:            logger,
 		storyService:   storyService,
 		projectService: projectService,
+		eh:             ehand.New(),
 	}
 }
 
@@ -32,7 +35,6 @@ func (s *Stories) GetAllStories(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
 	stories, err := s.storyService.GetStories(user.AccountId)
-
 	if err != nil {
 		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
@@ -51,15 +53,7 @@ func (s *Stories) GetStoryById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	story, err := s.storyService.GetStoryById(user.AccountId, storyId)
-
-	switch err {
-	case nil:
-		break
-	case api.ErrorStoryNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := s.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -88,7 +82,7 @@ func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 	projectExists := s.projectService.Exists(storyDto.ProjectId)
 	if !projectExists {
 		s.log.Debugf("Project with projectId %s not found", storyDto.ProjectId)
-		api.ReturnError(api.ErrorProjectNotFound, http.StatusNotFound, w)
+		api.ReturnError(ehand.ErrorProjectNotFound, http.StatusNotFound, w)
 		return
 	}
 
@@ -101,14 +95,7 @@ func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	created, err := s.storyService.CreateStory(&newStory)
-	switch err {
-	case nil:
-		break
-	case api.ErrorStoryNotCreated:
-		api.ReturnError(err, http.StatusInternalServerError, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := s.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -130,7 +117,7 @@ func (s *Stories) UpdateStory(w http.ResponseWriter, r *http.Request) {
 	// Validate the Dto
 	if err := validate.Struct(storyDto); err != nil {
 		s.log.Error("The storyDto is not valid: ", err)
-		api.ReturnError(api.ErrorStoryJsonParse, http.StatusBadRequest, w)
+		api.ReturnError(ehand.ErrorStoryJsonParse, http.StatusBadRequest, w)
 		return
 	}
 
@@ -138,7 +125,7 @@ func (s *Stories) UpdateStory(w http.ResponseWriter, r *http.Request) {
 	projectExists := s.projectService.Exists(storyDto.ProjectId)
 	if !projectExists {
 		s.log.Debugf("Project with projectId %s not found", storyDto.ProjectId)
-		api.ReturnError(api.ErrorProjectNotFound, http.StatusNotFound, w)
+		api.ReturnError(ehand.ErrorProjectNotFound, http.StatusNotFound, w)
 		return
 	}
 
@@ -146,7 +133,7 @@ func (s *Stories) UpdateStory(w http.ResponseWriter, r *http.Request) {
 	ns, err := s.storyService.GetStoryById(user.AccountId, storyId)
 	if err != nil {
 		s.log.Debugf("The story with storyId %s and accountId % could not be found", storyId, user.AccountId)
-		api.ReturnError(api.ErrorStoryNotFound, http.StatusNotFound, w)
+		api.ReturnError(ehand.ErrorStoryNotFound, http.StatusNotFound, w)
 		return
 	}
 
@@ -160,17 +147,7 @@ func (s *Stories) UpdateStory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = s.storyService.UpdateStory(storyId, ns)
-
-	switch err {
-	case nil:
-		break
-	case api.ErrorStoryNotFound:
-		api.ReturnError(api.ErrorStoryNotFound, http.StatusNotFound, w)
-		return
-	case api.ErrorStoryNotUpdated:
-		api.ReturnError(api.ErrorStoryNotUpdated, http.StatusInternalServerError, w)
-		return
-	default:
+	if status := s.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -181,18 +158,7 @@ func (s *Stories) DeleteStory(w http.ResponseWriter, r *http.Request) {
 	storyId, _ := getParamFomRequest(r, "id")
 
 	err := s.storyService.DeleteStory(storyId)
-
-	switch err {
-	case nil:
-		break
-	case api.ErrorStoryNotFound:
-		api.ReturnError(err, http.StatusNotFound, w)
-		return
-	case api.ErrorStoryNotDeleted:
-		api.ReturnError(err, http.StatusInternalServerError, w)
-		return
-	default:
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := s.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
