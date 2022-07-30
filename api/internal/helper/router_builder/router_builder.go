@@ -2,8 +2,8 @@ package router_builder
 
 import (
 	"github.com/gorilla/mux"
+	"godo/configuration"
 	"godo/internal/api/handler"
-	"godo/internal/configuration"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
 	"net/http"

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"godo/internal/configuration"
+	"godo/configuration"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository/entities"
 

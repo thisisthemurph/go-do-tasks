@@ -28,7 +28,7 @@ func makeConfig(configName string, log ilog.StdLogger) (conf Config) {
 	viper.SetConfigName(configName)
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
-	viper.AddConfigPath("../..")
+	viper.AddConfigPath("..")
 
 	viper.AutomaticEnv()
 

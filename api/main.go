@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/rs/cors"
-	"godo/internal/configuration"
+	"godo/configuration"
 	"godo/internal/helper/ilog"
 )
 
