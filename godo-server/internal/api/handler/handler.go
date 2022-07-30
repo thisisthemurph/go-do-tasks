@@ -125,6 +125,10 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 }
 
 func handleMalformedJSONError(w http.ResponseWriter, err error) {
+	if err == nil {
+		return
+	}
+
 	var mr *malformedRequest
 	if errors.As(err, &mr) {
 		api.ReturnError(mr.err, mr.status, w)

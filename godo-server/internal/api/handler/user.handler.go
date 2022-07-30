@@ -1,15 +1,14 @@
 package handler
 
 import (
-	"encoding/json"
 	"godo/internal/api"
+	"godo/internal/api/dto"
 	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
+	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"net/http"
-
-	"github.com/go-playground/validator"
 )
 
 type Users struct {
@@ -35,25 +34,14 @@ func NewUsersHandler(
 	}
 }
 
-type LoginRequest struct {
-	Email    string `json:"email" validate:"required"`
-	Password string `json:"password" validate:"required"`
-}
-
-type LoginResponse struct {
-	Token string `json:"token"`
-}
-
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
-	var request LoginRequest
-	err := json.NewDecoder(r.Body).Decode(&request)
+	request, err := getDtoFromJSONBody[dto.LoginRequestDto](w, r)
 	if err != nil {
-		api.ReturnError(err, http.StatusBadRequest, w)
+		u.log.Error("Error getting Dto from JSON body: ", err)
 		return
 	}
 
 	// Validate the login request
-	validate := validator.New()
 	err = validate.Struct(request)
 	if err != nil {
 		api.ReturnError(err, http.StatusBadRequest, w)
@@ -69,7 +57,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	// Verify the password
 	err = user.VerifyPassword(request.Password)
 	if err != nil {
-		u.log.Warn("Bad authentication: incorrect password")
+		u.log.Debug("Bad authentication: incorrect password")
 		api.ReturnError(ehand.ErrorUserAuthentication, http.StatusUnauthorized, w)
 		return
 	}
@@ -80,28 +68,18 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := LoginResponse{token}
+	response := dto.LoginResponseDto{Token: token}
 	api.Respond(response, http.StatusOK, w)
 }
 
-type RegistrationRequest struct {
-	Name      string `json:"name" validate:"required"`
-	Email     string `json:"email" validate:"required"`
-	Username  string `json:"username" validate:"required"`
-	Password  string `json:"password" validate:"required"`
-	AccountId string `json:"account_id" validate:"required"`
-}
-
 func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
-	var request RegistrationRequest
-	err := json.NewDecoder(r.Body).Decode(&request)
+	request, err := getDtoFromJSONBody[dto.RegistrationRequestDto](w, r)
 	if err != nil {
-		api.ReturnError(err, http.StatusBadRequest, w)
+		u.log.Error("Error getting Dto from JSON body: ", err)
 		return
 	}
 
 	// Validate the registration body data
-	validate := validator.New()
 	err = validate.Struct(request)
 	if err != nil {
 		api.ReturnError(err, http.StatusBadRequest, w)
