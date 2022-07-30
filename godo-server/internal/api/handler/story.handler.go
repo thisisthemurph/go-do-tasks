@@ -6,7 +6,6 @@ import (
 	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
-	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"net/http"
 )
@@ -63,18 +62,8 @@ func (s *Stories) GetStoryById(w http.ResponseWriter, r *http.Request) {
 func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
-	var storyDto dto.NewStoryDto
-	err := decodeJSONBody(w, r, &storyDto)
+	storyDto, err := getDtoFromJSONBody[dto.NewStoryDto](w, r)
 	if err != nil {
-		handleMalformedJSONError(w, err)
-		return
-	}
-
-	// Validate the story looks OK
-	err = storyDto.Validate()
-	if err != nil {
-		s.log.Debug(err)
-		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
 
@@ -105,21 +94,12 @@ func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 func (s *Stories) UpdateStory(w http.ResponseWriter, r *http.Request) {
 	storyId, _ := getParamFomRequest(r, "id")
 
-	var storyDto dto.NewStoryDto
-	err := decodeJSONBody(w, r, &storyDto)
+	storyDto, err := getDtoFromJSONBody[dto.NewStoryDto](w, r)
 	if err != nil {
-		handleMalformedJSONError(w, err)
 		return
 	}
 
 	user := getUserFromContext(r.Context())
-
-	// Validate the Dto
-	if err := validate.Struct(storyDto); err != nil {
-		s.log.Error("The storyDto is not valid: ", err)
-		api.ReturnError(ehand.ErrorStoryJsonParse, http.StatusBadRequest, w)
-		return
-	}
 
 	// Ensure the project for the story exists
 	projectExists := s.projectService.Exists(storyDto.ProjectId)

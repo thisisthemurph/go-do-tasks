@@ -8,6 +8,7 @@ import (
 
 type TagQuery interface {
 	Exists(tagId uint) bool
+	ExistsWithName(name, projectId string) bool
 	GetTagById(tagId uint, projectId string) (*entities.Tag, error)
 	CreateTag(newTag entities.Tag) (*entities.Tag, error)
 	UpdateTag(newTag entities.Tag) (*entities.Tag, error)
@@ -34,6 +35,16 @@ func (q *tagQuery) Exists(tagId uint) bool {
 	return r.RowsAffected == 1
 }
 
+func (q *tagQuery) ExistsWithName(name, projectId string) bool {
+	q.log.Debugf("Checking if Tag{name=%s, projectId=%s} exists", name, projectId)
+
+	var tag entities.Tag
+	r := Database.First(&tag, "name = ? AND project_id = ?", name, projectId)
+	ilog.ErrorlnIf(r.Error, q.log)
+
+	return r.RowsAffected == 1
+}
+
 func (q *tagQuery) GetTagById(tagId uint, projectId string) (*entities.Tag, error) {
 	q.log.Debugf("Fetching Tag with tagId %d and projectId %s", tagId, projectId)
 
@@ -45,7 +56,7 @@ func (q *tagQuery) GetTagById(tagId uint, projectId string) (*entities.Tag, erro
 }
 
 func (q *tagQuery) CreateTag(newTag entities.Tag) (*entities.Tag, error) {
-	q.log.Debugf("Creating Tag with name %d", newTag.Name)
+	q.log.Debugf("Creating Tag{name=%s}", newTag.Name)
 
 	r := Database.Create(&newTag)
 	ilog.ErrorlnIf(r.Error, q.log)

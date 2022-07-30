@@ -28,6 +28,7 @@ func makeErrorMap() map[error]int {
 		ErrorTagNotCreated:        http.StatusInternalServerError,
 		ErrorTagNotUpdated:        http.StatusInternalServerError,
 		ErrorTagMalformedId:       http.StatusBadRequest,
+		ErrorTagAlreadyExists:     http.StatusBadRequest,
 	}
 }
 
@@ -64,8 +65,9 @@ var (
 )
 
 var (
-	ErrorTagNotFound    = errors.New("the specified tag could not be found")
-	ErrorTagNotCreated  = errors.New("the tag could not be created")
-	ErrorTagNotUpdated  = errors.New("the tag could not be updated")
-	ErrorTagMalformedId = errors.New("the tagId is not in an appropriate format - expected uint")
+	ErrorTagNotFound      = errors.New("the specified tag could not be found")
+	ErrorTagNotCreated    = errors.New("the tag could not be created")
+	ErrorTagNotUpdated    = errors.New("the tag could not be updated")
+	ErrorTagMalformedId   = errors.New("the tagId is not in an appropriate format - expected uint")
+	ErrorTagAlreadyExists = errors.New("a tag with that name already exists for the given project")
 )

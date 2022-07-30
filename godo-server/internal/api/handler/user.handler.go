@@ -37,7 +37,6 @@ func NewUsersHandler(
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	request, err := getDtoFromJSONBody[dto.LoginRequestDto](w, r)
 	if err != nil {
-		u.log.Error("Error getting Dto from JSON body: ", err)
 		return
 	}
 
@@ -75,7 +74,6 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	request, err := getDtoFromJSONBody[dto.RegistrationRequestDto](w, r)
 	if err != nil {
-		u.log.Error("Error getting Dto from JSON body: ", err)
 		return
 	}
 

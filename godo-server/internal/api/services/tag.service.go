@@ -37,10 +37,14 @@ func (t *tagService) GetTagById(tagId uint, projectId string) (*entities.Tag, er
 }
 
 func (t *tagService) CreateTag(newTag entities.Tag) (*entities.Tag, error) {
-	created, err := t.query.CreateTag(newTag)
+	exists := t.query.ExistsWithName(newTag.Name, newTag.ProjectId)
+	if exists {
+		t.log.Debugf("Tag{name=%s} already exists in Project{id=%S}", newTag.Name, newTag.ProjectId)
+		return nil, ehand.ErrorTagAlreadyExists
+	}
 
+	created, err := t.query.CreateTag(newTag)
 	if err != nil {
-		t.log.Infof("Could not create Tag: ", err)
 		return nil, ehand.ErrorTagNotCreated
 	}
 

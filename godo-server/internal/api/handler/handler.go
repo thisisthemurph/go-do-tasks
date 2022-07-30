@@ -147,6 +147,7 @@ func getDtoFromJSONBody[T any](w http.ResponseWriter, r *http.Request) (*T, erro
 
 	err = validate.Struct(obj)
 	if err != nil {
+		log.Println("JSON Body validation error: ", err.Error())
 		api.ReturnError(err, http.StatusBadRequest, w)
 		return nil, err
 	}

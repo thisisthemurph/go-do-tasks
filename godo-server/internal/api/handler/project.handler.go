@@ -7,7 +7,6 @@ import (
 	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
-	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"net/http"
 	"strconv"
@@ -64,23 +63,12 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
-	var projectDto dto.NewProjectDto
-
-	err := decodeJSONBody(w, r, &projectDto)
+	projectDto, err := getDtoFromJSONBody[dto.NewProjectDto](w, r)
 	if err != nil {
-		handleMalformedJSONError(w, err)
 		return
 	}
 
 	user := getUserFromContext(r.Context())
-
-	// Validate the project looks OK
-	err = validate.Struct(projectDto)
-	if err != nil {
-		p.log.Debug(err)
-		api.ReturnError(err, http.StatusBadRequest, w)
-		return
-	}
 
 	// Create the new Project
 	newProject := entities.Project{
@@ -98,14 +86,11 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
-	newProjectData := &entities.Project{}
 	projectId, _ := getParamFomRequest(r, "id")
 
 	// Gat the new project data from the body
-	err := api.FromJSON(&newProjectData, r.Body)
+	newProjectData, err := getDtoFromJSONBody[entities.Project](w, r)
 	if err != nil {
-		p.log.Error("Could not process Project from request body: ", err)
-		api.ReturnError(ehand.ErrorProjectJSONParse, http.StatusBadRequest, w)
 		return
 	}
 
@@ -123,7 +108,6 @@ func (p *Projects) AddTagToProject(w http.ResponseWriter, r *http.Request) {
 	projId, _ := getParamFomRequest(r, "id")
 	tagDto, err := getDtoFromJSONBody[dto.NewTagDto](w, r)
 	if err != nil {
-		p.log.Error("Error getting Dto from JSON body: ", err)
 		return
 	}
 
@@ -133,8 +117,7 @@ func (p *Projects) AddTagToProject(w http.ResponseWriter, r *http.Request) {
 	tag.ProjectId = projId
 
 	_, err = p.tagService.CreateTag(tag)
-	if err != nil {
-		api.ReturnError(err, http.StatusInternalServerError, w)
+	if status := p.eh.HandleApiError(w, err); status != http.StatusOK {
 		return
 	}
 
@@ -153,7 +136,6 @@ func (p *Projects) UpdateProjectTag(w http.ResponseWriter, r *http.Request) {
 
 	tagDto, err := getDtoFromJSONBody[dto.NewTagDto](w, r)
 	if err != nil {
-		p.log.Error("Error getting Dto from JSON body: ", err)
 		return
 	}
 
@@ -183,10 +165,8 @@ func (p *Projects) DeleteProjectTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Projects) UpdateProjectStatus(w http.ResponseWriter, r *http.Request) {
-	var statusDto dto.ProjectStatusUpdateDto
-	err := decodeJSONBody(w, r, &statusDto)
+	statusDto, err := getDtoFromJSONBody[dto.ProjectStatusUpdateDto](w, r)
 	if err != nil {
-		handleMalformedJSONError(w, err)
 		return
 	}
 

@@ -6,7 +6,6 @@ import (
 	ehand "godo/internal/api/errorhandler"
 	"godo/internal/api/services"
 	"godo/internal/helper/ilog"
-	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"net/http"
 )
@@ -56,21 +55,12 @@ func (t *Tasks) GetTaskById(w http.ResponseWriter, r *http.Request) {
 
 // CreateTask TODO: Validate that the story belongs to the user's account
 func (t *Tasks) CreateTask(w http.ResponseWriter, r *http.Request) {
-	var taskDto dto.NewTaskDto
-	err := decodeJSONBody(w, r, &taskDto)
+	taskDto, err := getDtoFromJSONBody[dto.NewTaskDto](w, r)
 	if err != nil {
-		handleMalformedJSONError(w, err)
 		return
 	}
 
 	user := getUserFromContext(r.Context())
-
-	err = validate.Struct(taskDto)
-	if err != nil {
-		t.log.Error("Invalid NewTaskDto: ", err)
-		api.ReturnError(err, http.StatusBadRequest, w)
-		return
-	}
 
 	// Create the task
 	newTask := entities.Task{
@@ -93,7 +83,6 @@ func (t *Tasks) CreateTask(w http.ResponseWriter, r *http.Request) {
 func (t *Tasks) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskDto, err := getDtoFromJSONBody[dto.UpdateTaskDto](w, r)
 	if err != nil {
-		t.log.Error("Error getting Dto from JSON body: ", err)
 		return
 	}
 
@@ -130,7 +119,6 @@ func (t *Tasks) UpdateTaskStatus(w http.ResponseWriter, r *http.Request) {
 
 	taskDto, err := getDtoFromJSONBody[dto.UpdateTaskStatusDto](w, r)
 	if err != nil {
-		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
 
@@ -156,7 +144,6 @@ func (t *Tasks) UpdateTaskType(w http.ResponseWriter, r *http.Request) {
 
 	taskDto, err := getDtoFromJSONBody[dto.UpdateTaskTypeDto](w, r)
 	if err != nil {
-		api.ReturnError(err, http.StatusBadRequest, w)
 		return
 	}
 
