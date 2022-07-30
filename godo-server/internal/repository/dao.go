@@ -12,6 +12,7 @@ type DAO interface {
 	NewStoryQuery(logger ilog.StdLogger) StoryQuery
 	NewProjectQuery(logger ilog.StdLogger) ProjectQuery
 	NewTaskQuery(logger ilog.StdLogger) TaskQuery
+	NewTagQuery(logger ilog.StdLogger) TagQuery
 }
 
 type dao struct {

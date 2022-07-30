@@ -71,4 +71,15 @@ func populateTestData(db *gorm.DB) {
 
 	project.Creator = user
 	db.Create(&project)
+
+	story1.Creator = user
+	story1.Project = project
+	db.Create(&story1)
+
+	task1.Creator = user
+	task1.Story = story1
+	db.Create(&task1)
+
+	tag1.Project = project
+	db.Create(&tag1)
 }

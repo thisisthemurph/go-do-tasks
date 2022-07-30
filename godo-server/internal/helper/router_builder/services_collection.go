@@ -6,32 +6,36 @@ import (
 	"godo/internal/repository"
 )
 
-type ServicesCollection struct {
+type ServiceCollection struct {
 	authService    services.AuthService
 	accountService services.AccountService
 	projectService services.ProjectService
 	storyService   services.StoryService
+	tagService     services.TagService
 	taskService    services.TaskService
 	userService    services.UserService
 }
 
-func newServiceCollection(dao repository.DAO, JWTKey string) ServicesCollection {
+func newServiceCollection(dao repository.DAO, JWTKey string) ServiceCollection {
 	authServiceLogger := ilog.MakeLoggerWithTag("AuthService")
 	accountServiceLogger := ilog.MakeLoggerWithTag("AccountService")
 	accountQueryLogger := ilog.MakeLoggerWithTag("AccountQuery")
-	projectServiceLogger := ilog.MakeLoggerWithTag("ProjectService")
 	projectQueryLogger := ilog.MakeLoggerWithTag("ProjectRepo")
-	storyServiceLogger := ilog.MakeLoggerWithTag("StoryService")
+	projectServiceLogger := ilog.MakeLoggerWithTag("ProjectService")
 	storyQueryLogger := ilog.MakeLoggerWithTag("StoryRepo")
+	storyServiceLogger := ilog.MakeLoggerWithTag("StoryService")
+	tagQueryLogger := ilog.MakeLoggerWithTag("TagRepo")
+	tagServiceLogger := ilog.MakeLoggerWithTag("TagService")
+	taskQueryLogger := ilog.MakeLoggerWithTag("TaskQuery")
 	taskServiceLogger := ilog.MakeLoggerWithTag("TaskService")
-	taskQueryLogger := ilog.MakeLoggerWithTag("TasQuery")
-	userServiceLogger := ilog.MakeLoggerWithTag("UserService")
 	userQueryLogger := ilog.MakeLoggerWithTag("UserQuery")
+	userServiceLogger := ilog.MakeLoggerWithTag("UserService")
 
 	// Initialize the repositories
 	accountQuery := dao.NewAccountQuery(accountQueryLogger)
 	projectQuery := dao.NewProjectQuery(projectQueryLogger)
 	storyQuery := dao.NewStoryQuery(storyQueryLogger)
+	tagQuery := dao.NewTagQuery(tagQueryLogger)
 	taskQuery := dao.NewTaskQuery(taskQueryLogger)
 	userQuery := dao.NewApiUserQuery(userQueryLogger)
 
@@ -40,14 +44,16 @@ func newServiceCollection(dao repository.DAO, JWTKey string) ServicesCollection 
 	accountService := services.NewAccountService(accountQuery, accountServiceLogger)
 	projectService := services.NewProjectService(projectQuery, projectServiceLogger)
 	storyService := services.NewStoryService(storyQuery, storyServiceLogger)
+	tagService := services.NewTagService(tagQuery, tagServiceLogger)
 	taskService := services.NewTaskService(taskQuery, taskServiceLogger)
 	userService := services.NewUserService(userQuery, userServiceLogger)
 
-	return ServicesCollection{
+	return ServiceCollection{
 		authService,
 		accountService,
 		projectService,
 		storyService,
+		tagService,
 		taskService,
 		userService,
 	}

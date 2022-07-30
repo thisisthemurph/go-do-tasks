@@ -16,7 +16,7 @@ type RouterBuilder interface {
 type routerBuilder struct {
 	r  *mux.Router // Unauthenticated router
 	ar *mux.Router // Authenticated router
-	sc ServicesCollection
+	sc ServiceCollection
 	mc MiddlewareCollection
 }
 
@@ -63,31 +63,63 @@ func (b *routerBuilder) buildAccountRouter() {
 
 func (b *routerBuilder) buildProjectRouter() {
 	projectLogger := ilog.MakeLoggerWithTag("ProjectHandler")
-	projectHandler := handler.NewProjectsHandler(projectLogger, b.sc.projectService)
+	projectHandler := handler.NewProjectsHandler(projectLogger, b.sc.projectService, b.sc.tagService)
 
-	b.ar.HandleFunc("/project", projectHandler.CreateProject).Methods(http.MethodPost)
-	b.ar.HandleFunc("/project", projectHandler.GetAllProjects).Methods(http.MethodGet)
-	b.ar.HandleFunc("/project/{id:[a-f0-9-]+}", projectHandler.GetProjectById).Methods(http.MethodGet)
-	b.ar.HandleFunc("/project/{id:[a-f0-9-]+}/status", projectHandler.UpdateProjectStatus).Methods(http.MethodPut)
+	b.Post("/project", projectHandler.CreateProject)
+	b.Get("/project", projectHandler.GetAllProjects)
+	b.Get("/project/{id:[a-f0-9-]+}", projectHandler.GetProjectById)
+
+	// Status
+	b.Put("/project/{id:[a-f0-9-]+}/status", projectHandler.UpdateProjectStatus)
+
+	// Tags
+	b.Post("/project/{id:[a-f0-9-]+}/tag", projectHandler.AddTagToProject)
+	b.Delete("/project/{projectId:[a-f0-9-]+}/tag/{tagId:[0-9]+}", projectHandler.DeleteProjectTag)
 }
 
 func (b *routerBuilder) buildStoryRouter() {
 	storyLogger := ilog.MakeLoggerWithTag("StoryHandler")
 	storyHandler := handler.NewStoriesHandler(storyLogger, b.sc.storyService, b.sc.projectService)
 
-	b.ar.HandleFunc("/story", storyHandler.CreateStory).Methods(http.MethodPost)
-	b.ar.HandleFunc("/story", storyHandler.GetAllStories).Methods(http.MethodGet)
-	b.ar.HandleFunc("/story/{id:[a-f0-9-]+}", storyHandler.GetStoryById).Methods(http.MethodGet)
-	b.ar.HandleFunc("/story/{id:[a-f0-9-]+}", storyHandler.UpdateStory).Methods(http.MethodPut)
-	b.ar.HandleFunc("/story/{id:[a-f0-9-]+}", storyHandler.DeleteStory).Methods(http.MethodDelete)
+	b.Get("/story", storyHandler.GetAllStories)
+	b.Get("/story", storyHandler.CreateStory)
+	b.Get("/story/{id:[a-f0-9-]+}", storyHandler.GetStoryById)
+	b.Put("/story/{id:[a-f0-9-]+}", storyHandler.UpdateStory)
+	b.Delete("/story/{id:[a-f0-9-]+}", storyHandler.DeleteStory)
 }
 
 func (b *routerBuilder) buildTaskRouter() {
 	taskLogger := ilog.MakeLoggerWithTag("TaskHandler")
-	taskHandler := handler.NewTasksHandler(taskLogger, b.sc.taskService)
+	taskHandler := handler.NewTasksHandler(taskLogger, b.sc.taskService, b.sc.tagService)
 
-	b.ar.HandleFunc("/task", taskHandler.CreateTask).Methods(http.MethodPost)
-	b.ar.HandleFunc("/task", taskHandler.GetAllTasks).Methods(http.MethodGet)
-	b.ar.HandleFunc("/task/{id:[a-f0-9-]+}", taskHandler.GetTaskById).Methods(http.MethodGet)
-	b.ar.HandleFunc("/task/{id:[a-f0-9-]+}", taskHandler.UpdateTask).Methods(http.MethodPut)
+	b.Post("/task", taskHandler.CreateTask)
+	b.Get("/task", taskHandler.GetAllTasks)
+	b.Get("/task/{id:[a-f0-9-]+}", taskHandler.GetTaskById)
+	b.Put("/task/{id:[a-f0-9-]+}", taskHandler.UpdateTask)
+
+	// Type and status
+	b.Put("/task/{id:[a-f0-9-]+}/type", taskHandler.UpdateTaskStatus)
+	b.Put("/task/{id:[a-f0-9-]+}/status", taskHandler.UpdateTaskStatus)
+
+	// Tags
+	b.Put("/task/{taskId:[a-f0-9-]+}/tag/{tagId:[0-9]+}", taskHandler.AddTag)
+	b.Delete("/task/{taskId:[a-f0-9-]+}/tag/{tagId:[0-9]+}", taskHandler.RemoveTag)
+}
+
+type HttpHandlerFunc = func(w http.ResponseWriter, r *http.Request)
+
+func (b *routerBuilder) Get(path string, f HttpHandlerFunc) {
+	b.ar.HandleFunc(path, f).Methods(http.MethodGet)
+}
+
+func (b *routerBuilder) Post(path string, f HttpHandlerFunc) {
+	b.ar.HandleFunc(path, f).Methods(http.MethodPost)
+}
+
+func (b *routerBuilder) Put(path string, f HttpHandlerFunc) {
+	b.ar.HandleFunc(path, f).Methods(http.MethodPut)
+}
+
+func (b *routerBuilder) Delete(path string, f HttpHandlerFunc) {
+	b.ar.HandleFunc(path, f).Methods(http.MethodDelete)
 }

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"godo/internal/api"
 	"godo/internal/api/dto"
 	"godo/internal/api/services"
@@ -163,15 +162,14 @@ func (p *Projects) AddTagToProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Projects) UpdateProjectTag(w http.ResponseWriter, r *http.Request) {
+	projId, _ := getParamFomRequest(r, "projectId")
 	tagIdValue, _ := getParamFomRequest(r, "tagId")
 	tagId, err := strconv.ParseUint(tagIdValue, 10, 32)
 	if err != nil {
 		p.log.Error(err)
-		api.ReturnError(errors.New("tagId is not an appropriate number"), http.StatusBadRequest, w)
+		api.ReturnError(api.ErrorTagMalformedId, http.StatusBadRequest, w)
 		return
 	}
-
-	projId, _ := getParamFomRequest(r, "projectId")
 
 	tagDto, err := getDtoFromJSONBody[dto.NewTagDto](w, r)
 	if err != nil {
@@ -186,6 +184,25 @@ func (p *Projects) UpdateProjectTag(w http.ResponseWriter, r *http.Request) {
 	_, err = p.tagService.UpdateTag(*tag)
 	if err != nil {
 		api.ReturnError(api.ErrorTagNotUpdated, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond("", http.StatusNoContent, w)
+}
+
+func (p *Projects) DeleteProjectTag(w http.ResponseWriter, r *http.Request) {
+	projId, _ := getParamFomRequest(r, "projectId")
+	tagId, _ := getUintParamFomRequest(r, "tagId")
+
+	_, err := p.tagService.DeleteTag(tagId, projId)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTagNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
 		return
 	}
 

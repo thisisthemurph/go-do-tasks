@@ -9,7 +9,9 @@ import (
 	"godo/internal/helper/validate"
 	"godo/internal/repository/entities"
 	"io"
+	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/golang/gddo/httputil/header"
@@ -20,8 +22,27 @@ import (
 // Returns a string value and a success boolean
 func getParamFomRequest(r *http.Request, param string) (string, bool) {
 	params := mux.Vars(r)
-	paramValue, paramExists := params[param]
-	return paramValue, paramExists
+	value, exists := params[param]
+	if !exists {
+		log.Printf("the param %s does not exist in the request\n", param)
+	}
+
+	return value, exists
+}
+
+func getUintParamFomRequest(r *http.Request, param string) (uint, bool) {
+	value, exists := getParamFomRequest(r, param)
+	if !exists {
+		return 0, false
+	}
+
+	p, err := strconv.ParseUint(value, 10, 32)
+	if err != nil {
+		log.Printf("Error processing param %s: %s", param, err.Error())
+		return 0, false
+	}
+
+	return uint(p), exists
 }
 
 func getStructFromContext[T any](ctx context.Context, key interface{}) T {

@@ -22,4 +22,18 @@ var (
 		Name:        "TheMainSolution_Dev",
 		Description: "This is the description of this project/solution",
 	}
+
+	story1 = entities.Story{
+		Name:        "Story name",
+		Description: "This is only a test story",
+	}
+
+	task1 = entities.Task{
+		Name:        "Task 1",
+		Description: "This is only a task",
+	}
+
+	tag1 = entities.Tag{
+		Name: "Tag 1",
+	}
 )

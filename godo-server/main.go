@@ -19,7 +19,7 @@ func main() {
 
 	config := configuration.LoadConfig(configLogger)
 
-	repository.CreateAndPopulateDatabase(logger)
+	//repository.CreateAndPopulateDatabase(logger)
 	dao := repository.NewDAO(daoLogger)
 
 	rb := router_builder.New(dao, config)

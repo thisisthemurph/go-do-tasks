@@ -12,7 +12,7 @@ type MiddlewareCollection struct {
 	Project middleware.ProjectMiddleware
 }
 
-func newMiddlewareCollection(sc ServicesCollection) MiddlewareCollection {
+func newMiddlewareCollection(sc ServiceCollection) MiddlewareCollection {
 	logger := ilog.MakeLoggerWithTag("Middleware")
 
 	return MiddlewareCollection{

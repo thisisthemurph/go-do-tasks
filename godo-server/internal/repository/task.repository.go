@@ -6,7 +6,7 @@ import (
 )
 
 type TaskQuery interface {
-	Exists(taskId string) bool
+	Exists(accountId, taskId string) bool
 	GetAllTasks(accountId string) (entities.TaskList, error)
 	GetTaskById(taskId, accountId string) (entities.Task, error)
 	CreateTask(newTask entities.Task) (entities.Task, error)
@@ -51,13 +51,16 @@ func (q *taskQuery) GetTaskById(taskId, accountId string) (entities.Task, error)
 	return task, err
 }
 
-func (q *taskQuery) Exists(taskId string) bool {
+func (q *taskQuery) Exists(accountId, taskId string) bool {
 	q.log.Infof("Checking if task with Id %s exists", taskId)
 
 	var task entities.Task
-	r := Database.First(&task, "id = ?", taskId)
-	ilog.ErrorlnIf(r.Error, q.log)
+	r := Database.
+		Joins("JOIN users ON tasks.creator_id = users.id").
+		Where("users.account_id = ?", accountId).
+		First(&task, "id = ?", taskId)
 
+	ilog.ErrorlnIf(r.Error, q.log)
 	return r.RowsAffected == 1
 }
 

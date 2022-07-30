@@ -13,10 +13,14 @@ import (
 type Tasks struct {
 	log         ilog.StdLogger
 	taskService services.TaskService
+	tagService  services.TagService
 }
 
-func NewTasksHandler(logger ilog.StdLogger, taskService services.TaskService) Tasks {
-	return Tasks{log: logger, taskService: taskService}
+func NewTasksHandler(
+	logger ilog.StdLogger,
+	taskService services.TaskService,
+	tagService services.TagService) Tasks {
+	return Tasks{log: logger, taskService: taskService, tagService: tagService}
 }
 
 func (t *Tasks) GetAllTasks(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +158,7 @@ func (t *Tasks) UpdateTaskStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Update the task
 	task.Status = taskDto.Status
-	t.taskService.UpdateTask(task)
+	updated, err := t.taskService.UpdateTask(task)
 	switch err {
 	case nil:
 		break
@@ -166,7 +170,7 @@ func (t *Tasks) UpdateTaskStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Respond(task, http.StatusOK, w)
+	api.Respond(updated, http.StatusOK, w)
 }
 
 func (t *Tasks) UpdateTaskType(w http.ResponseWriter, r *http.Request) {
@@ -194,7 +198,7 @@ func (t *Tasks) UpdateTaskType(w http.ResponseWriter, r *http.Request) {
 
 	// Update the task
 	task.Type = taskDto.Type
-	t.taskService.UpdateTask(task)
+	updated, err := t.taskService.UpdateTask(task)
 	switch err {
 	case nil:
 		break
@@ -206,5 +210,75 @@ func (t *Tasks) UpdateTaskType(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Respond(task, http.StatusOK, w)
+	api.Respond(updated, http.StatusOK, w)
+}
+
+func (t *Tasks) AddTag(w http.ResponseWriter, r *http.Request) {
+	tagId, _ := getUintParamFomRequest(r, "tagId")
+	taskId, _ := getParamFomRequest(r, "taskId")
+
+	user := getUserFromContext(r.Context())
+
+	// Ensure that the task exists for the user's account
+	_, err := t.taskService.GetTaskById(taskId, user.AccountId)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTaskNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	// Add the tag to the task in the database
+	err = t.tagService.AddToTask(tagId, taskId)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTagNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond("", http.StatusNoContent, w)
+}
+
+func (t *Tasks) RemoveTag(w http.ResponseWriter, r *http.Request) {
+	tagId, _ := getUintParamFomRequest(r, "tagId")
+	taskId, _ := getParamFomRequest(r, "taskId")
+
+	user := getUserFromContext(r.Context())
+
+	// Ensure that the task exists for the user's account
+	_, err := t.taskService.GetTaskById(taskId, user.AccountId)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTaskNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	// Add the tag to the task in the database
+	err = t.tagService.RemoveFromTask(taskId, tagId)
+	switch err {
+	case nil:
+		break
+	case api.ErrorTagNotFound:
+		api.ReturnError(err, http.StatusNotFound, w)
+		return
+	default:
+		api.ReturnError(err, http.StatusInternalServerError, w)
+		return
+	}
+
+	api.Respond("", http.StatusNoContent, w)
 }

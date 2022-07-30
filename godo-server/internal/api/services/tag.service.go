@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"godo/internal/api"
 	"godo/internal/helper/ilog"
 	"godo/internal/repository"
@@ -8,9 +9,12 @@ import (
 )
 
 type TagService interface {
-	GetTagById(tagId uint, projectId string) (*entities.Tag, error)
 	CreateTag(newTag entities.Tag) (*entities.Tag, error)
+	DeleteTag(tagId uint, projectId string) (*entities.Tag, error)
+	GetTagById(tagId uint, projectId string) (*entities.Tag, error)
 	UpdateTag(newTag entities.Tag) (*entities.Tag, error)
+	AddToTask(tagId uint, taskId string) error
+	RemoveFromTask(taskId string, tagId uint) error
 }
 
 type tagService struct {
@@ -50,4 +54,47 @@ func (t *tagService) UpdateTag(newTag entities.Tag) (*entities.Tag, error) {
 	}
 
 	return updated, nil
+}
+
+func (t *tagService) DeleteTag(tagId uint, projectId string) (*entities.Tag, error) {
+	// Ensure the tag exists
+	_, err := t.GetTagById(tagId, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	deleted, err := t.query.DeleteTag(tagId)
+	if err != nil {
+		return nil, errors.New("the tag could not be deleted")
+	}
+
+	return deleted, nil
+}
+
+func (t *tagService) AddToTask(tagId uint, taskId string) error {
+	exists := t.query.Exists(tagId)
+	if !exists {
+		return api.ErrorTagNotFound
+	}
+
+	err := t.query.AddTagToTask(taskId, tagId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *tagService) RemoveFromTask(taskId string, tagId uint) error {
+	exists := t.query.Exists(tagId)
+	if !exists {
+		return api.ErrorTagNotFound
+	}
+
+	err := t.query.RemoveTagFromTask(taskId, tagId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

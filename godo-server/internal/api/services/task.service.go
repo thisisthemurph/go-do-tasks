@@ -9,6 +9,7 @@ import (
 )
 
 type TaskService interface {
+	Exists(accountId, taskId string) bool
 	GetTasks(accountId string) (entities.TaskList, error)
 	GetTaskById(taskId, accountId string) (*entities.Task, error)
 	CreateTask(newTask entities.Task) (*entities.Task, error)
@@ -62,4 +63,9 @@ func (t *taskService) UpdateTask(newTask *entities.Task) (*entities.Task, error)
 	}
 
 	return updated, nil
+}
+
+func (t *taskService) Exists(accountId, taskId string) bool {
+	exists := t.query.Exists(accountId, taskId)
+	return exists
 }
