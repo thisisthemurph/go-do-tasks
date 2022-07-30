@@ -7,4 +7,3 @@ Start powershell {
     Set-Location -Path ".\web-ui"
     &npm run start
 }
-
