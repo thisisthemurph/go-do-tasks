@@ -8,7 +8,7 @@ import (
 
 type ProjectQuery interface {
 	GetProjectById(projectId string, accountId string) (*entities.Project, error)
-	GetAllProjects(accountId string) ([]*entities.Project, error)
+	GetAllProjects(accountId string) (entities.ProjectInfoList, error)
 	CreateProject(newProject *entities.Project) (*entities.Project, error)
 	UpdateProject(projectId string, newProject *entities.Project) error
 	DeleteProject(projectId string) error
@@ -23,18 +23,24 @@ func (d *dao) NewProjectQuery(logger ilog.StdLogger) ProjectQuery {
 	return &projectQuery{log: logger}
 }
 
-func (q *projectQuery) GetAllProjects(accountId string) ([]*entities.Project, error) {
-	q.log.Infof("Fetching all project with accountId %s", accountId)
+func (q *projectQuery) GetAllProjects(accountId string) (entities.ProjectInfoList, error) {
+	q.log.Debugf("Fetching all project information associated with Account{id=%s}", accountId)
 
-	var projects []*entities.Project
-	result := Database.
-		Preload("Creator", "account_id = ?", accountId).
-		Joins("JOIN users on projects.creator_id = users.id").
+	var info entities.ProjectInfoList
+	r := Database.
+		Table("projects").
+		Select("projects.id, projects.name, projects.description, projects.status, "+
+			"projects.created_at, projects.updated_at, count(stories.id) stories_count, count(tags.id) tags_count").
+		Joins("LEFT JOIN users ON users.account_id = ?", accountId).
+		Joins("LEFT JOIN stories ON projects.id = stories.project_id").
+		Joins("LEFT JOIN tags ON projects.id = tags.project_id").
 		Where("users.account_id = ?", accountId).
-		Find(&projects)
+		Group("projects.id").
+		Order("projects.created_at DESC").
+		Find(&info)
 
-	ilog.ErrorlnIf(result.Error, q.log)
-	return projects, result.Error
+	ilog.ErrorlnIf(r.Error, q.log)
+	return info, r.Error
 }
 
 func (q *projectQuery) GetProjectById(projectId string, accountId string) (*entities.Project, error) {
@@ -58,7 +64,7 @@ func (q *projectQuery) GetProjectById(projectId string, accountId string) (*enti
 }
 
 func (q *projectQuery) CreateProject(newProject *entities.Project) (*entities.Project, error) {
-	q.log.Infof("Creating Project with name %v", newProject.Name)
+	q.log.Debugf("Creating Project with name %v", newProject.Name)
 
 	response := Database.Create(&newProject)
 	ilog.ErrorlnIf(response.Error, q.log)
@@ -68,15 +74,16 @@ func (q *projectQuery) CreateProject(newProject *entities.Project) (*entities.Pr
 
 // UpdateProject TODO: Remove duplicate query
 func (q *projectQuery) UpdateProject(projectId string, newProject *entities.Project) error {
-	project, _ := q.getProjectByIdOnly(projectId)
+	q.log.Debugf("Updating Project{id=%s}", projectId)
 
+	project, _ := q.getProjectByIdOnly(projectId)
 	err := Database.First(&project, "id = ?", projectId).Error
 	if err != nil {
 		q.log.Errorf("Unable to fetch project (%v) from database", projectId)
 		return err
 	}
 
-	// TODO: Place override of props into handler
+	// TODO: Place override of props into model?
 	project.Name = newProject.Name
 	project.Description = newProject.Description
 	project.UpdatedAt = time.Now()
@@ -87,7 +94,7 @@ func (q *projectQuery) UpdateProject(projectId string, newProject *entities.Proj
 }
 
 func (q *projectQuery) DeleteProject(projectId string) error {
-	q.log.Infof("Deleting project with ID %v", projectId)
+	q.log.Debugf("Deleting Project{id=%s}", projectId)
 
 	deletedProject := &entities.Project{}
 	result := Database.Where("id = ?", projectId).Delete(deletedProject)
@@ -95,7 +102,7 @@ func (q *projectQuery) DeleteProject(projectId string) error {
 }
 
 func (q *projectQuery) Exists(projectId string) bool {
-	q.log.Debugf("Checking if project with ID %s exists", projectId)
+	q.log.Debugf("Checking if Project{id=%s} exists", projectId)
 
 	project := &entities.Project{}
 	r := Database.First(project, "id = ?", projectId)
@@ -105,7 +112,7 @@ func (q *projectQuery) Exists(projectId string) bool {
 }
 
 func (q *projectQuery) getProjectByIdOnly(projectId string) (*entities.Project, error) {
-	q.log.Infof("Fetching project with projectId %s", projectId)
+	q.log.Debugf("Fetching Project{id=%s}", projectId)
 
 	project := entities.Project{}
 	result := Database.First(&project, "id = ?", projectId)

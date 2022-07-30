@@ -9,7 +9,7 @@ import (
 )
 
 type ProjectService interface {
-	GetProjects(accountId string) ([]*entities.Project, error)
+	GetProjects(accountId string) ([]*entities.ProjectInfo, error)
 	GetProjectById(projectId, accountId string) (*entities.Project, error)
 	CreateProject(newProject *entities.Project) (*entities.Project, error)
 	Exists(projectId string) bool
@@ -29,7 +29,7 @@ func NewProjectService(projectQuery repository.ProjectQuery, logger ilog.StdLogg
 	}
 }
 
-func (p *projectService) GetProjects(accountId string) ([]*entities.Project, error) {
+func (p *projectService) GetProjects(accountId string) ([]*entities.ProjectInfo, error) {
 	projects, err := p.query.GetAllProjects(accountId)
 
 	if err != nil {
