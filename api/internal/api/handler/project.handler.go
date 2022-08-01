@@ -12,6 +12,12 @@ import (
 	"strconv"
 )
 
+// swagger:route GET /project projects listProjects
+// Returns a list of projects associated with the authenticated account
+// responses:
+//  200: productsResponse
+//  500: ""
+
 type Projects struct {
 	log            ilog.StdLogger
 	projectService services.ProjectService

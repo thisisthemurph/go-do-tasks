@@ -30,6 +30,7 @@ func NewAccountsHandler(
 	}
 }
 
+// CreateAccount Creates an account and appropriate user
 func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	accountDto := r.Context().Value(entities.AccountKey{}).(dto.NewAccountDto)
 

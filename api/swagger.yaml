@@ -1,0 +1,87 @@
+basePath: /api
+consumes:
+- application/json
+definitions:
+  ProjectInfo:
+    properties:
+      created_at:
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      status:
+        type: string
+        x-go-name: StatusValue
+      story_count:
+        format: uint16
+        type: integer
+        x-go-name: StoryCount
+      tag_count:
+        format: uint16
+        type: integer
+        x-go-name: TagCount
+      updated_at:
+        format: date-time
+        type: string
+        x-go-name: UpdatedAt
+    type: object
+    x-go-package: godo/internal/repository/entities
+  ProjectInfoList:
+    items:
+      $ref: '#/definitions/ProjectInfo'
+    type: array
+    x-go-package: godo/internal/repository/entities
+host: localhost
+info:
+  contact:
+    email: michael.w.murphy@outlook.com
+    name: Mike Murphy
+    url: https://github.com/thisisthemurph
+  description: the purpose of this API is to facilitate data flow for the Godo application
+  termsOfService: there are no TOS at this moment, use at your own risk we take no
+    responsibility
+  title: Godo API.
+  version: 0.0.1
+paths:
+  /project:
+    get:
+      description: Returns a list of projects associated with the authenticated account
+      operationId: listProjects
+      responses:
+        "200":
+          $ref: '#/responses/productsResponse'
+        "500":
+          $ref: '#/responses/%22%22'
+      tags:
+      - projects
+produces:
+- application/json
+responses:
+  projectsResponse:
+    description: ProjectInfoResponseWrapper ProjectInfoResponse a list of projects
+      information associated with the authenticated account
+    schema:
+      $ref: '#/definitions/ProjectInfoList'
+schemes:
+- http
+security:
+- api_key: []
+securityDefinitions:
+  api_key:
+    in: header
+    name: KEY
+    type: apiKey
+  oauth2:
+    authorizationUrl: /oauth2/auth
+    in: header
+    tokenUrl: /oauth2/token
+    type: oauth2
+swagger: "2.0"
