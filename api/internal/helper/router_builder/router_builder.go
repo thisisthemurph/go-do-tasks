@@ -1,6 +1,7 @@
 package router_builder
 
 import (
+	redoc "github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"godo/configuration"
 	"godo/internal/api/handler"
@@ -14,31 +15,34 @@ type RouterBuilder interface {
 }
 
 type routerBuilder struct {
-	r  *mux.Router // Unauthenticated router
-	ar *mux.Router // Authenticated router
-	sc ServiceCollection
-	mc MiddlewareCollection
+	router *mux.Router // Base router
+	r      *mux.Router // Unauthenticated router
+	ar     *mux.Router // Authenticated router
+	sc     ServiceCollection
+	mc     MiddlewareCollection
 }
 
 func New(dao repository.DAO, config configuration.Config) RouterBuilder {
 	sc := newServiceCollection(dao, config.JWTKey)
 	mc := newMiddlewareCollection(sc)
 
-	router := mux.NewRouter().PathPrefix("/api").Subrouter()
-	authedRouter := router.Name("authedRouter").Subrouter()
+	router := mux.NewRouter()
+	openRouter := router.PathPrefix("/api").Subrouter()
+	authedRouter := router.PathPrefix("/api").Subrouter()
 	authedRouter.Use(mc.Auth.AuthenticateRequestMiddleware)
 
 	return &routerBuilder{
-		r:  router,
-		ar: authedRouter,
-		sc: sc,
-		mc: mc,
+		router: router,
+		r:      openRouter,
+		ar:     authedRouter,
+		sc:     sc,
+		mc:     mc,
 	}
 }
 
 func (b *routerBuilder) Init() *mux.Router {
 	b.buildRouters()
-	return b.r
+	return b.router
 }
 
 func (b *routerBuilder) buildRouters() {
@@ -46,6 +50,8 @@ func (b *routerBuilder) buildRouters() {
 	b.buildProjectRouter()
 	b.buildStoryRouter()
 	b.buildTaskRouter()
+
+	b.buildSwagger()
 }
 
 func (b *routerBuilder) buildAccountRouter() {
@@ -59,6 +65,7 @@ func (b *routerBuilder) buildAccountRouter() {
 
 	b.r.HandleFunc("/auth/login", userHandler.Login).Methods(http.MethodPost)
 	b.r.HandleFunc("/auth/register", userHandler.Register).Methods(http.MethodPost)
+
 }
 
 func (b *routerBuilder) buildProjectRouter() {
@@ -105,6 +112,13 @@ func (b *routerBuilder) buildTaskRouter() {
 	// Tags
 	b.Put("/task/{taskId:[a-f0-9-]+}/tag/{tagId:[0-9]+}", taskHandler.AddTag)
 	b.Delete("/task/{taskId:[a-f0-9-]+}/tag/{tagId:[0-9]+}", taskHandler.RemoveTag)
+}
+
+func (b *routerBuilder) buildSwagger() {
+	opts := redoc.RedocOpts{SpecURL: "/swagger.yaml"}
+	sh := redoc.Redoc(opts, nil)
+	b.router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+	b.router.Handle("/docs", sh)
 }
 
 type HttpHandlerFunc = func(w http.ResponseWriter, r *http.Request)

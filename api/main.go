@@ -7,7 +7,6 @@ import (
 	"time"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/rs/cors"
 	"godo/configuration"
 	"godo/internal/helper/ilog"
 )
@@ -25,11 +24,13 @@ func main() {
 	rb := router_builder.New(dao, config)
 	router := rb.Init()
 
+	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+
 	srv := &http.Server{
 		Addr:         "0.0.0.0:" + config.ApiPort,
+		Handler:      router,
 		WriteTimeout: time.Second * 15,
 		IdleTimeout:  time.Second * 15,
-		Handler:      cors.Default().Handler(router),
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
