@@ -189,3 +189,9 @@ func getDtoFromJSONBody[T any](w http.ResponseWriter, r *http.Request) (*T, erro
 
 	return &obj, nil
 }
+
+// Generic Swagger documentation
+
+// NoContentResponse a response containing no content
+// swagger:response noContent
+type NoContentResponse struct{}

@@ -11,3 +11,9 @@ type Account struct {
 }
 
 type AccountKey struct{}
+
+// AccountResponse an account representing the organisation, company, or group
+// swagger:response accountResponse
+type AccountResponse struct {
+	Body Account
+}

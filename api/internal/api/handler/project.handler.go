@@ -12,12 +12,6 @@ import (
 	"strconv"
 )
 
-// swagger:route GET /project projects listProjects
-// Returns a list of projects associated with the authenticated account
-// responses:
-//  200: productsResponse
-//  500: ""
-
 type Projects struct {
 	log            ilog.StdLogger
 	projectService services.ProjectService
@@ -38,6 +32,13 @@ func NewProjectsHandler(
 	}
 }
 
+// swagger:route GET /project Projects listProjectInfo
+//
+// Returns a list of projects associated with the authenticated account
+//
+// responses:
+//  200: projectInfoResponse
+//  500: errorResponse
 func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 	user := entities.User{}
 	user = r.Context().Value(entities.UserKey{}).(entities.User)
@@ -51,6 +52,15 @@ func (p *Projects) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 	api.Respond(projects, http.StatusOK, w)
 }
 
+// swagger:route GET /project/{projectId} Projects getProject
+//
+// Returns the specified project
+//
+// responses:
+//  200: projectResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
@@ -68,6 +78,14 @@ func (p *Projects) GetProjectById(w http.ResponseWriter, r *http.Request) {
 	api.Respond(project, http.StatusOK, w)
 }
 
+// swagger:route POST /project Projects createProject
+//
+// Creates the given project resource
+//
+// responses:
+//  201: projectResponse
+//  400: errorResponse
+//  500: errorResponse
 func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	projectDto, err := getDtoFromJSONBody[dto.NewProjectDto](w, r)
 	if err != nil {
@@ -91,6 +109,16 @@ func (p *Projects) CreateProject(w http.ResponseWriter, r *http.Request) {
 	api.Respond(createdProject, http.StatusCreated, w)
 }
 
+// swagger:route PUT /project/{projectId} Projects updateProject
+//
+// Updates the values of the specified project
+//
+// responses:
+//  204: noContent
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
+// UpdateProject TODO: Improve to incorporate a DTO
 func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	projectId, _ := getParamFomRequest(r, "id")
 
@@ -109,6 +137,15 @@ func (p *Projects) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	api.Respond("", http.StatusNoContent, w)
 }
 
+// swagger:route POST /project/{projectId}/tag Projects createTag
+//
+// Created and associated the tag with the specified project
+//
+// responses:
+//  204: noContent
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 // AddTagToProject TODO: Ensure project doesn't already have a tag with the same name
 func (p *Projects) AddTagToProject(w http.ResponseWriter, r *http.Request) {
 	projId, _ := getParamFomRequest(r, "id")
@@ -130,6 +167,7 @@ func (p *Projects) AddTagToProject(w http.ResponseWriter, r *http.Request) {
 	api.Respond("", http.StatusNoContent, w)
 }
 
+// UpdateProjectTag TODO: Verify that this method is being run
 func (p *Projects) UpdateProjectTag(w http.ResponseWriter, r *http.Request) {
 	projId, _ := getParamFomRequest(r, "projectId")
 	tagIdValue, _ := getParamFomRequest(r, "tagId")
@@ -158,6 +196,15 @@ func (p *Projects) UpdateProjectTag(w http.ResponseWriter, r *http.Request) {
 	api.Respond("", http.StatusNoContent, w)
 }
 
+// swagger:route DELETE /project/{projectId}/tag Projects deleteTag
+//
+// Created and associated the tag with the specified project
+//
+// responses:
+//  204: noContent
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (p *Projects) DeleteProjectTag(w http.ResponseWriter, r *http.Request) {
 	projId, _ := getParamFomRequest(r, "projectId")
 	tagId, _ := getUintParamFomRequest(r, "tagId")
@@ -170,6 +217,15 @@ func (p *Projects) DeleteProjectTag(w http.ResponseWriter, r *http.Request) {
 	api.Respond("", http.StatusNoContent, w)
 }
 
+// swagger:route PUT /project/{projectId}/status Projects updateProjectStatus
+//
+// Updates the status of the specified project
+//
+// responses:
+//  204: noContent
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (p *Projects) UpdateProjectStatus(w http.ResponseWriter, r *http.Request) {
 	statusDto, err := getDtoFromJSONBody[dto.ProjectStatusUpdateDto](w, r)
 	if err != nil {
@@ -199,6 +255,14 @@ func (p *Projects) UpdateProjectStatus(w http.ResponseWriter, r *http.Request) {
 	api.Respond("", http.StatusNoContent, w)
 }
 
+// swagger:route DELETE /project Projects deleteProject
+//
+// Deletes the given project resource
+//
+// responses:
+//  204: noContent
+//  400: errorResponse
+//  500: errorResponse
 func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	projectId, _ := getParamFomRequest(r, "id")
 
@@ -209,4 +273,40 @@ func (p *Projects) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.Respond("", http.StatusNoContent, w)
+}
+
+// Generic Swagger documentation
+
+// swagger:parameters getProject updateProject deleteProject createTag deleteTag
+type ProductUUIDParameter struct {
+	// The ID of the specified Project
+	// in: path
+	// required: true
+	// pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+	// example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+	ID string `json:"id"`
+}
+
+// swagger:parameters createProject
+type NewProjectParameter struct {
+	// The new project resource to be created
+	// in: body
+	// required: true
+	Body dto.NewProjectDto
+}
+
+// swagger:parameters updateProject
+type UpdateProjectParameter struct {
+	// The new project resource to be created
+	// in: body
+	// required: true
+	Body dto.UpdateProjectDto
+}
+
+// swagger:parameters createTag
+type NewTag struct {
+	// The tag to be created and associated with the given project
+	// in: body
+	// required: true
+	Body dto.NewTagDto
 }

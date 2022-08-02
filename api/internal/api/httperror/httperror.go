@@ -39,3 +39,9 @@ func (e *httpError) GetStatusCode() int {
 func (e *httpError) GetStatusText() string {
 	return e.StatusText
 }
+
+// ErrorResponseWrapper a response detailing a user or internal server error
+// swagger:response errorResponse
+type ErrorResponseWrapper struct {
+	Body httpError
+}

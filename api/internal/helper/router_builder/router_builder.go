@@ -65,7 +65,6 @@ func (b *routerBuilder) buildAccountRouter() {
 
 	b.r.HandleFunc("/auth/login", userHandler.Login).Methods(http.MethodPost)
 	b.r.HandleFunc("/auth/register", userHandler.Register).Methods(http.MethodPost)
-
 }
 
 func (b *routerBuilder) buildProjectRouter() {
