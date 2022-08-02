@@ -202,19 +202,78 @@ definitions:
         x-go-name: StatusCode
     type: object
     x-go-package: godo/internal/api/httperror
-  newTagDto:
-    description: NewTagDto model for creating a new tag
+  jwtTokenResponse:
+    description: LoginResponseDto model for returning a JWT
     properties:
+      token:
+        description: the token authenticating the user
+        type: string
+        x-go-name: Token
+    type: object
+    x-go-name: LoginResponseDto
+    x-go-package: godo/internal/api/dto
+  loginRequestDto:
+    description: LoginRequestDto model logging in a user
+    properties:
+      email:
+        description: the email address of the user
+        type: string
+        x-go-name: Email
+      password:
+        description: the user's password
+        type: string
+        x-go-name: Password
+    required:
+    - email
+    - password
+    type: object
+    x-go-name: LoginRequestDto
+    x-go-package: godo/internal/api/dto
+  newTagDto:
+    description: UpdateProjectDto model for updating the project
+    properties:
+      description:
+        description: the description of the project
+        type: string
+        x-go-name: Description
       name:
-        description: the name associated with the tag
+        description: the name of the project
         maxLength: 16
         minLength: 1
         type: string
         x-go-name: Name
+      status:
+        $ref: '#/definitions/ProjectStatus'
+    type: object
+    x-go-name: UpdateProjectDto
+    x-go-package: godo/internal/api/dto
+  registrationRequestDto:
+    description: RegistrationRequestDto model for registering a new user
+    properties:
+      account_id:
+        description: the account to which the user is to be associated
+        type: string
+        x-go-name: AccountId
+      email:
+        type: string
+        x-go-name: Email
+      name:
+        type: string
+        x-go-name: Name
+      password:
+        type: string
+        x-go-name: Password
+      username:
+        type: string
+        x-go-name: Username
     required:
     - name
+    - email
+    - username
+    - password
+    - account_id
     type: object
-    x-go-name: NewTagDto
+    x-go-name: RegistrationRequestDto
     x-go-package: godo/internal/api/dto
 host: localhost
 info:
@@ -245,10 +304,21 @@ paths:
     post:
       description: Logs in a user returning a JWT for authentication
       operationId: login
+      parameters:
+      - description: The user to be authenticated
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/loginRequestDto'
       responses:
         "200":
-          $ref: '#/responses/accountResponse'
+          description: jwtTokenResponse
+          schema:
+            $ref: '#/definitions/jwtTokenResponse'
         "400":
+          $ref: '#/responses/errorResponse'
+        "404":
           $ref: '#/responses/errorResponse'
         "500":
           $ref: '#/responses/errorResponse'

@@ -38,8 +38,9 @@ func NewUsersHandler(
 //
 // Logs in a user returning a JWT for authentication
 // responses:
-//	200: accountResponse
+//	200: JWTTokenResponse
 //  400: errorResponse
+//  404: errorResponse
 //  500: errorResponse
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	request, err := getDtoFromJSONBody[dto.LoginRequestDto](w, r)
@@ -126,4 +127,15 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.Respond(createdUser, http.StatusOK, w)
+}
+
+// Generic Swagger documentation
+
+// swagger:parameters login
+type LoginRequestParameter struct {
+	// The user to be authenticated
+	//
+	// in: body
+	// required: true
+	Body dto.LoginRequestDto
 }
