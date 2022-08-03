@@ -60,9 +60,11 @@ func (s *ProjectInfo) AfterFind(tx *gorm.DB) {
 	s.StatusValue = s.Status.String()
 }
 
-// ProjectResponse the specified project
+// ProjectResponse the specified Project
 // swagger:response projectResponse
 type ProjectResponse struct {
+	// The resultant Project
+	// in: body
 	Body Project
 }
 

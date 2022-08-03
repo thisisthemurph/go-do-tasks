@@ -39,3 +39,19 @@ func (t *Task) AfterSave(tx *gorm.DB) {
 	t.TypeValue = t.Type.String()
 	t.StatusValue = t.Status.String()
 }
+
+// TaskResponse the specified Task
+// swagger:response taskResponse
+type TaskResponse struct {
+	// The resultant Task
+	// in: body
+	Body Task
+}
+
+// TaskInfoResponse a list of Task information
+// swagger:response taskInfoResponse
+type TaskInfoResponse struct {
+	// An array of Task information
+	// in: body
+	Body TaskList
+}

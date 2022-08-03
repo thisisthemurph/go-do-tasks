@@ -79,7 +79,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	api.Respond(response, http.StatusOK, w)
 }
 
-// swagger:route POST /auth/register Auth register
+// swagger:route POST /auth/register Auth registration
 //
 // Registers a user in the system
 // responses:
@@ -138,4 +138,13 @@ type LoginRequestParameter struct {
 	// in: body
 	// required: true
 	Body dto.LoginRequestDto
+}
+
+// swagger:parameters registration
+type RegistrationRequestParameter struct {
+	// The user to be registered to the specified account
+	//
+	// in: body
+	// required: true
+	Body dto.RegistrationRequestDto
 }

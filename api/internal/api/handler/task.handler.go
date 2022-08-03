@@ -30,6 +30,13 @@ func NewTasksHandler(
 	}
 }
 
+// swagger:route GET /task Tasks listTasks
+//
+// Returns a list of Tasks associated with the authenticated account
+//
+// responses:
+//  200: taskInfoResponse
+//  500: errorResponse
 func (t *Tasks) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
@@ -41,6 +48,14 @@ func (t *Tasks) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	api.Respond(tasks, http.StatusOK, w)
 }
 
+// swagger:route GET /task/{taskId} Tasks getTask
+//
+// Returns the requested Task
+//
+// responses:
+//  200: taskResponse
+//  404: errorResponse
+//  500: errorResponse
 func (t *Tasks) GetTaskById(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 	taskId, _ := getParamFomRequest(r, "id")
@@ -53,6 +68,15 @@ func (t *Tasks) GetTaskById(w http.ResponseWriter, r *http.Request) {
 	api.Respond(task, http.StatusOK, w)
 }
 
+// swagger:route POST /task Tasks createTask
+//
+// Creates the given Task
+//
+// responses:
+//  201: taskResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 // CreateTask TODO: Validate that the story belongs to the user's account
 func (t *Tasks) CreateTask(w http.ResponseWriter, r *http.Request) {
 	taskDto, err := getDtoFromJSONBody[dto.NewTaskDto](w, r)
@@ -78,6 +102,15 @@ func (t *Tasks) CreateTask(w http.ResponseWriter, r *http.Request) {
 	api.Respond(created, http.StatusCreated, w)
 }
 
+// swagger:route PUT /task/{taskId} Tasks updateTask
+//
+// Updates the given Task
+//
+// responses:
+//  200: taskResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 // UpdateTask TODO: Remove deduplication of error handling in update
 // methods and other functions in the handlers
 func (t *Tasks) UpdateTask(w http.ResponseWriter, r *http.Request) {
@@ -113,6 +146,15 @@ func (t *Tasks) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	api.Respond(updated, http.StatusOK, w)
 }
 
+// swagger:route PUT /task/{taskId}/status Tasks updateTaskStatus
+//
+// Updates the status of the specified Task
+//
+// responses:
+//  200: taskResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (t *Tasks) UpdateTaskStatus(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 	taskId, _ := getParamFomRequest(r, "id")
@@ -138,6 +180,15 @@ func (t *Tasks) UpdateTaskStatus(w http.ResponseWriter, r *http.Request) {
 	api.Respond(updated, http.StatusOK, w)
 }
 
+// swagger:route PUT /task/{taskId}/type Tasks updateTaskType
+//
+// Updates the type of the specified Task
+//
+// responses:
+//  200: taskResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (t *Tasks) UpdateTaskType(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 	taskId, _ := getParamFomRequest(r, "id")
@@ -163,6 +214,15 @@ func (t *Tasks) UpdateTaskType(w http.ResponseWriter, r *http.Request) {
 	api.Respond(updated, http.StatusOK, w)
 }
 
+// swagger:route PUT /task/{taskId}/tag/{tagId} Tasks addTaskTag
+//
+// Associates the give existing Tag with the specified Task
+//
+// responses:
+//  200: noContent
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (t *Tasks) AddTag(w http.ResponseWriter, r *http.Request) {
 	tagId, _ := getUintParamFomRequest(r, "tagId")
 	taskId, _ := getParamFomRequest(r, "taskId")
@@ -184,6 +244,16 @@ func (t *Tasks) AddTag(w http.ResponseWriter, r *http.Request) {
 	api.Respond("", http.StatusNoContent, w)
 }
 
+// swagger:route DELETE /task/{taskId}/tag/{tagId} Tasks removeTaskTag
+//
+// Disassociate the give existing Tag with the specified Task - does not delete the tag.\n
+// To delete the tag, the tag should be deleted from the associated Project
+//
+// responses:
+//  200: noContent
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (t *Tasks) RemoveTag(w http.ResponseWriter, r *http.Request) {
 	tagId, _ := getUintParamFomRequest(r, "tagId")
 	taskId, _ := getParamFomRequest(r, "taskId")
@@ -203,4 +273,57 @@ func (t *Tasks) RemoveTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.Respond("", http.StatusNoContent, w)
+}
+
+// Generic Swagger documentation
+
+// swagger:parameters getTask updateTask updateTaskStatus updateTaskType addTaskTag removeTaskTag
+type TaskUUIDParameter struct {
+	// The ID of the specified Task
+	// in: path
+	// required: true
+	// pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+	// example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+	ID string `json:"taskId"`
+}
+
+// swagger:parameters addTaskTag removeTaskTag
+type TagIDParameter struct {
+	// The ID of the specified Tag
+	// in: path
+	// required: true
+	// example: 7 or 52
+	ID uint `json:"tagId"`
+}
+
+// swagger:parameters createTask
+type NewTaskParameter struct {
+	// The task to be created
+	// in: body
+	// required: true
+	Body dto.NewTaskDto
+}
+
+// swagger:parameters updateTask
+type UpdateTaskParameter struct {
+	// The task to be created
+	// in: body
+	// required: true
+	Body dto.UpdateTaskDto
+}
+
+// swagger:parameters updateTaskStatus
+type UpdateTaskStatusParameter struct {
+	// The status of the task to be updated
+	// in: body
+	// required: true
+	Body dto.UpdateTaskStatusDto
+}
+
+// swagger:parameters updateTaskType
+type UpdateTaskTypeParameter struct {
+	// The type of the task to be updated
+	// in: body
+	// required: true
+	Body dto.UpdateTaskTypeDto
 }
