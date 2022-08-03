@@ -56,3 +56,19 @@ type StoryInfoList []*StoryInfo
 func (s *StoryInfo) AfterFind(tx *gorm.DB) {
 	s.StatusValue = s.Status.String()
 }
+
+// StoryResponse the specified Story
+// swagger:response storyResponse
+type StoryResponse struct {
+	// The resultant Story
+	// in: body
+	Body Story
+}
+
+// StoryInfoResponse a list of Story information
+// swagger:response storyInfoResponse
+type StoryInfoResponse struct {
+	// An array of Story information
+	// in: body
+	Body StoryInfoList
+}

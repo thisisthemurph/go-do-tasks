@@ -1,0 +1,989 @@
+basePath: /api
+consumes:
+- application/json
+definitions:
+  Account:
+    properties:
+      email:
+        type: string
+        x-go-name: Email
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: godo/internal/repository/entities
+  JWTTokenResponse:
+    description: LoginResponseDto model for returning a JWT
+    properties:
+      token:
+        description: the token authenticating the user
+        type: string
+        x-go-name: Token
+    type: object
+    x-go-name: LoginResponseDto
+    x-go-package: godo/internal/api/dto
+  NewStoryDto:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      project_id:
+        type: string
+        x-go-name: ProjectId
+    type: object
+    x-go-package: godo/internal/api/dto
+  NewTaskDto:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      status:
+        $ref: '#/definitions/ProgressStatus'
+      story_id:
+        type: string
+        x-go-name: StoryId
+      type:
+        $ref: '#/definitions/TaskType'
+    type: object
+    x-go-package: godo/internal/api/dto
+  ProgressStatus:
+    format: uint8
+    type: integer
+    x-go-package: godo/internal/repository/enums
+  Project:
+    properties:
+      creator:
+        $ref: '#/definitions/User'
+      creator_id:
+        format: uint64
+        type: integer
+        x-go-name: CreatorId
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      status:
+        type: string
+        x-go-name: StatusValue
+      stories:
+        items:
+          $ref: '#/definitions/Story'
+        type: array
+        x-go-name: Stories
+      tags:
+        items:
+          $ref: '#/definitions/Tag'
+        type: array
+        x-go-name: Tags
+    type: object
+    x-go-package: godo/internal/repository/entities
+  ProjectInfo:
+    properties:
+      created_at:
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      status:
+        type: string
+        x-go-name: StatusValue
+      story_count:
+        format: uint16
+        type: integer
+        x-go-name: StoryCount
+      tag_count:
+        format: uint16
+        type: integer
+        x-go-name: TagCount
+      updated_at:
+        format: date-time
+        type: string
+        x-go-name: UpdatedAt
+    type: object
+    x-go-package: godo/internal/repository/entities
+  ProjectInfoList:
+    items:
+      $ref: '#/definitions/ProjectInfo'
+    type: array
+    x-go-package: godo/internal/repository/entities
+  ProjectStatus:
+    format: uint8
+    type: integer
+    x-go-package: godo/internal/repository/enums
+  Story:
+    properties:
+      creator:
+        $ref: '#/definitions/User'
+      creator_id:
+        format: uint64
+        type: integer
+        x-go-name: CreatorId
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      project_id:
+        type: string
+        x-go-name: ProjectId
+      status:
+        type: string
+        x-go-name: StatusValue
+      tasks:
+        items:
+          $ref: '#/definitions/Task'
+        type: array
+        x-go-name: Tasks
+    type: object
+    x-go-package: godo/internal/repository/entities
+  StoryInfo:
+    properties:
+      created_at:
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      status:
+        type: string
+        x-go-name: StatusValue
+      task_count:
+        format: uint16
+        type: integer
+        x-go-name: TaskCount
+      updated_at:
+        format: date-time
+        type: string
+        x-go-name: UpdatedAt
+    type: object
+    x-go-package: godo/internal/repository/entities
+  StoryInfoList:
+    items:
+      $ref: '#/definitions/StoryInfo'
+    type: array
+    x-go-package: godo/internal/repository/entities
+  Tag:
+    description: |-
+      Tag - A Project has any number of tags associated with it
+      A subset of these tgs can be assigned to any of the tasks
+      that form part of the Project
+    properties:
+      id:
+        format: uint64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: godo/internal/repository/entities
+  Task:
+    properties:
+      creator:
+        $ref: '#/definitions/User'
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      status:
+        type: string
+        x-go-name: StatusValue
+      story_id:
+        type: string
+        x-go-name: StoryId
+      tags:
+        items:
+          $ref: '#/definitions/Tag'
+        type: array
+        x-go-name: Tags
+      type:
+        type: string
+        x-go-name: TypeValue
+    type: object
+    x-go-package: godo/internal/repository/entities
+  TaskList:
+    items:
+      $ref: '#/definitions/Task'
+    type: array
+    x-go-package: godo/internal/repository/entities
+  TaskType:
+    format: uint8
+    type: integer
+    x-go-package: godo/internal/repository/enums
+  UpdateTaskDto:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      status:
+        $ref: '#/definitions/ProgressStatus'
+      story_id:
+        type: string
+        x-go-name: StoryId
+      type:
+        $ref: '#/definitions/TaskType'
+    type: object
+    x-go-package: godo/internal/api/dto
+  UpdateTaskStatusDto:
+    properties:
+      status:
+        $ref: '#/definitions/ProgressStatus'
+    type: object
+    x-go-package: godo/internal/api/dto
+  UpdateTaskTypeDto:
+    properties:
+      type:
+        $ref: '#/definitions/TaskType'
+    type: object
+    x-go-package: godo/internal/api/dto
+  User:
+    properties:
+      created_at:
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
+      discriminator:
+        format: uint32
+        type: integer
+        x-go-name: Discriminator
+      email:
+        type: string
+        x-go-name: Email
+      id:
+        format: uint64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      updated_at:
+        format: date-time
+        type: string
+        x-go-name: UpdatedAt
+      username:
+        type: string
+        x-go-name: Username
+    type: object
+    x-go-package: godo/internal/repository/entities
+  httpError:
+    properties:
+      errorMessage:
+        type: string
+        x-go-name: ErrorMessage
+      statusCode:
+        format: int64
+        type: integer
+        x-go-name: StatusCode
+    type: object
+    x-go-package: godo/internal/api/httperror
+  loginRequestDto:
+    description: LoginRequestDto model logging in a user
+    properties:
+      email:
+        description: the email address of the user
+        type: string
+        x-go-name: Email
+      password:
+        description: the user's password
+        type: string
+        x-go-name: Password
+    required:
+    - email
+    - password
+    type: object
+    x-go-name: LoginRequestDto
+    x-go-package: godo/internal/api/dto
+  newTagDto:
+    description: UpdateProjectDto model for updating the project
+    properties:
+      description:
+        description: the description of the project
+        type: string
+        x-go-name: Description
+      name:
+        description: the name of the project
+        maxLength: 16
+        minLength: 1
+        type: string
+        x-go-name: Name
+      status:
+        $ref: '#/definitions/ProjectStatus'
+    type: object
+    x-go-name: UpdateProjectDto
+    x-go-package: godo/internal/api/dto
+  registrationRequestDto:
+    description: RegistrationRequestDto model for registering a new user
+    properties:
+      account_id:
+        description: the account to which the user is to be associated
+        type: string
+        x-go-name: AccountId
+      email:
+        type: string
+        x-go-name: Email
+      name:
+        type: string
+        x-go-name: Name
+      password:
+        type: string
+        x-go-name: Password
+      username:
+        type: string
+        x-go-name: Username
+    required:
+    - name
+    - email
+    - username
+    - password
+    - account_id
+    type: object
+    x-go-name: RegistrationRequestDto
+    x-go-package: godo/internal/api/dto
+host: localhost
+info:
+  contact:
+    email: michael.w.murphy@outlook.com
+    name: Mike Murphy
+    url: https://github.com/thisisthemurph
+  description: the purpose of this API is to facilitate data flow for the Godo application
+  termsOfService: there are no TOS at this moment, use at your own risk; I take no
+    responsibility.
+  title: Godo API.
+  version: 1.0.0
+paths:
+  /account:
+    post:
+      description: Creates an account and associated user
+      operationId: createAccount
+      responses:
+        "200":
+          $ref: '#/responses/accountResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Accounts
+  /auth/login:
+    post:
+      description: Logs in a user returning a JWT for authentication
+      operationId: login
+      parameters:
+      - description: The user to be authenticated
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/loginRequestDto'
+      responses:
+        "200":
+          description: JWTTokenResponse
+          schema:
+            $ref: '#/definitions/JWTTokenResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      description: Registers a user in the system
+      operationId: registration
+      parameters:
+      - description: The user to be registered to the specified account
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/registrationRequestDto'
+      responses:
+        "200":
+          $ref: '#/responses/accountResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Auth
+  /project:
+    delete:
+      description: Deletes the given project resource
+      operationId: deleteProject
+      parameters:
+      - description: The ID of the specified Project
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: id
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "204":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Projects
+    get:
+      description: Returns a list of projects associated with the authenticated account
+      operationId: listProjectInfo
+      responses:
+        "200":
+          $ref: '#/responses/projectInfoResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Projects
+    post:
+      description: Creates the given project resource
+      operationId: createProject
+      parameters:
+      - description: The new project resource to be created
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/newTagDto'
+      responses:
+        "201":
+          $ref: '#/responses/projectResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Projects
+  /project/{projectId}:
+    get:
+      description: Returns the specified project
+      operationId: getProject
+      parameters:
+      - description: The ID of the specified Project
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: id
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/projectResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Projects
+    put:
+      description: Updates the values of the specified project
+      operationId: updateProject
+      parameters:
+      - description: The ID of the specified Project
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: id
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      - description: The new project resource to be created
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/newTagDto'
+      responses:
+        "204":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Projects
+  /project/{projectId}/status:
+    put:
+      description: Updates the status of the specified project
+      operationId: updateProjectStatus
+      responses:
+        "204":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Projects
+  /project/{projectId}/tag:
+    delete:
+      description: Created and associated the tag with the specified project
+      operationId: deleteTag
+      parameters:
+      - description: The ID of the specified Project
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: id
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "204":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Projects
+    post:
+      description: Created and associated the tag with the specified project
+      operationId: createTag
+      parameters:
+      - description: The ID of the specified Project
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: id
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      - description: The tag to be created and associated with the given project
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/newTagDto'
+      responses:
+        "204":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Projects
+  /story:
+    get:
+      description: Returns a list of STory information associated with the authenticated
+        account
+      operationId: listStoryInfo
+      responses:
+        "200":
+          $ref: '#/responses/storyInfoResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Stories
+    post:
+      description: Creates a new Story
+      operationId: createStory
+      parameters:
+      - description: The story to be created
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/NewStoryDto'
+      responses:
+        "201":
+          $ref: '#/responses/storyResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Stories
+  /story/{storyId}:
+    delete:
+      description: Deletes the specified Story
+      operationId: deleteStory
+      parameters:
+      - description: The ID of the specified Story
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: storyId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "204":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Stories
+    get:
+      description: Returns the specified Story
+      operationId: getStory
+      parameters:
+      - description: The ID of the specified Story
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: storyId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/storyResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Stories
+    put:
+      description: Updates the specified Story
+      operationId: updateStory
+      parameters:
+      - description: The ID of the specified Story
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: storyId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      - description: The story to be updated
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/NewStoryDto'
+      responses:
+        "200":
+          $ref: '#/responses/storyResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Stories
+  /task:
+    get:
+      description: Returns a list of Tasks associated with the authenticated account
+      operationId: listTasks
+      responses:
+        "200":
+          $ref: '#/responses/taskInfoResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Tasks
+    post:
+      description: Creates the given Task
+      operationId: createTask
+      parameters:
+      - description: The task to be created
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/NewTaskDto'
+      responses:
+        "201":
+          $ref: '#/responses/taskResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Tasks
+  /task/{taskId}:
+    get:
+      description: Returns the requested Task
+      operationId: getTask
+      parameters:
+      - description: The ID of the specified Task
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: taskId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/taskResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Tasks
+    put:
+      description: Updates the given Task
+      operationId: updateTask
+      parameters:
+      - description: The ID of the specified Task
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: taskId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      - description: The task to be created
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateTaskDto'
+      responses:
+        "200":
+          $ref: '#/responses/taskResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Tasks
+  /task/{taskId}/status:
+    put:
+      description: Updates the status of the specified Task
+      operationId: updateTaskStatus
+      parameters:
+      - description: The ID of the specified Task
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: taskId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      - description: The status of the task to be updated
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateTaskStatusDto'
+      responses:
+        "200":
+          $ref: '#/responses/taskResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Tasks
+  /task/{taskId}/tag/{tagId}:
+    delete:
+      description: |-
+        Disassociate the give existing Tag with the specified Task - does not delete the tag.\n
+        To delete the tag, the tag should be deleted from the associated Project
+      operationId: removeTaskTag
+      parameters:
+      - description: The ID of the specified Task
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: taskId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      - description: The ID of the specified Tag
+        example: 7 or 52
+        format: uint64
+        in: path
+        name: tagId
+        required: true
+        type: integer
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Tasks
+    put:
+      description: Associates the give existing Tag with the specified Task
+      operationId: addTaskTag
+      parameters:
+      - description: The ID of the specified Task
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: taskId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      - description: The ID of the specified Tag
+        example: 7 or 52
+        format: uint64
+        in: path
+        name: tagId
+        required: true
+        type: integer
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Tasks
+  /task/{taskId}/type:
+    put:
+      description: Updates the type of the specified Task
+      operationId: updateTaskType
+      parameters:
+      - description: The ID of the specified Task
+        example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+        in: path
+        name: taskId
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+        type: string
+        x-go-name: ID
+      - description: The type of the task to be updated
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateTaskTypeDto'
+      responses:
+        "200":
+          $ref: '#/responses/taskResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - Tasks
+produces:
+- application/json
+responses:
+  accountResponse:
+    description: AccountResponse an account representing the organisation, company,
+      or group
+    headers:
+      Body: {}
+    schema:
+      $ref: '#/definitions/Account'
+  errorResponse:
+    description: GenericErrorResponse a response detailing a user or internal server
+      error
+    headers:
+      Body: {}
+    schema:
+      $ref: '#/definitions/httpError'
+  noContent:
+    description: NoContentResponse a response containing no content
+  projectInfoResponse:
+    description: ProjectInfoResponse a list of project information associated with
+      the authenticated account
+    schema:
+      $ref: '#/definitions/ProjectInfoList'
+  projectResponse:
+    description: ProjectResponse the specified Project
+    schema:
+      $ref: '#/definitions/Project'
+  storyInfoResponse:
+    description: StoryInfoResponse a list of Story information
+    schema:
+      $ref: '#/definitions/StoryInfoList'
+  storyResponse:
+    description: StoryResponse the specified Story
+    schema:
+      $ref: '#/definitions/Story'
+  taskInfoResponse:
+    description: TaskInfoResponse a list of Task information
+    schema:
+      $ref: '#/definitions/TaskList'
+  taskResponse:
+    description: TaskResponse the specified Task
+    schema:
+      $ref: '#/definitions/Task'
+schemes:
+- http
+swagger: "2.0"

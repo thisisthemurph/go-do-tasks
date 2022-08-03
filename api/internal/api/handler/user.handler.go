@@ -34,6 +34,14 @@ func NewUsersHandler(
 	}
 }
 
+// swagger:route POST /auth/login Auth login
+//
+// Logs in a user returning a JWT for authentication
+// responses:
+//	200: JWTTokenResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	request, err := getDtoFromJSONBody[dto.LoginRequestDto](w, r)
 	if err != nil {
@@ -71,6 +79,14 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	api.Respond(response, http.StatusOK, w)
 }
 
+// swagger:route POST /auth/register Auth registration
+//
+// Registers a user in the system
+// responses:
+//	200: accountResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	request, err := getDtoFromJSONBody[dto.RegistrationRequestDto](w, r)
 	if err != nil {
@@ -111,4 +127,24 @@ func (u *Users) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.Respond(createdUser, http.StatusOK, w)
+}
+
+// Generic Swagger documentation
+
+// swagger:parameters login
+type LoginRequestParameter struct {
+	// The user to be authenticated
+	//
+	// in: body
+	// required: true
+	Body dto.LoginRequestDto
+}
+
+// swagger:parameters registration
+type RegistrationRequestParameter struct {
+	// The user to be registered to the specified account
+	//
+	// in: body
+	// required: true
+	Body dto.RegistrationRequestDto
 }

@@ -1,3 +1,24 @@
+// Package handler Godo API.
+//
+// the purpose of this API is to facilitate data flow for the Godo application
+//
+// Terms Of Service:
+//
+// there are no TOS at this moment, use at your own risk; I take no responsibility.
+//
+//     Schemes: http
+//     Host: localhost
+//     BasePath: /api
+//     Version: 1.0.0
+//     Contact: Mike Murphy<michael.w.murphy@outlook.com> https://github.com/thisisthemurph
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+// swagger:meta
 package handler
 
 import (
@@ -154,3 +175,9 @@ func getDtoFromJSONBody[T any](w http.ResponseWriter, r *http.Request) (*T, erro
 
 	return &obj, nil
 }
+
+// Generic Swagger documentation
+
+// NoContentResponse a response containing no content
+// swagger:response noContent
+type NoContentResponse struct{}

@@ -30,6 +30,13 @@ func NewAccountsHandler(
 	}
 }
 
+// swagger:route POST /account Accounts createAccount
+//
+// Creates an account and associated user
+// responses:
+//	200: accountResponse
+//  400: errorResponse
+//  500: errorResponse
 func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	accountDto := r.Context().Value(entities.AccountKey{}).(dto.NewAccountDto)
 
@@ -55,7 +62,7 @@ func (a *Accounts) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userExists {
-		api.ReturnError(ehand.ErrorUserAlreadyExists, http.StatusFound, w)
+		api.ReturnError(ehand.ErrorUserAlreadyExists, http.StatusBadRequest, w)
 		return
 	}
 

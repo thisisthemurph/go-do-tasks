@@ -59,3 +59,19 @@ type ProjectInfoList []*ProjectInfo
 func (s *ProjectInfo) AfterFind(tx *gorm.DB) {
 	s.StatusValue = s.Status.String()
 }
+
+// ProjectResponse the specified Project
+// swagger:response projectResponse
+type ProjectResponse struct {
+	// The resultant Project
+	// in: body
+	Body Project
+}
+
+// ProjectInfoResponse a list of project information associated with the authenticated account
+// swagger:response projectInfoResponse
+type ProjectInfoResponse struct {
+	// All projects associated with the authenticated account
+	// in: body
+	Body ProjectInfoList
+}

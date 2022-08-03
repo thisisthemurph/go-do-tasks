@@ -39,3 +39,9 @@ func (e *httpError) GetStatusCode() int {
 func (e *httpError) GetStatusText() string {
 	return e.StatusText
 }
+
+// GenericErrorResponse a response detailing a user or internal server error
+// swagger:response errorResponse
+type GenericErrorResponse struct {
+	Body httpError
+}

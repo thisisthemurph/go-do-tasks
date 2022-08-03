@@ -30,6 +30,13 @@ func NewStoriesHandler(
 	}
 }
 
+// swagger:route GET /story Stories listStoryInfo
+//
+// Returns a list of STory information associated with the authenticated account
+//
+// responses:
+//  200: storyInfoResponse
+//  500: errorResponse
 func (s *Stories) GetStoriesInfo(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
@@ -42,6 +49,15 @@ func (s *Stories) GetStoriesInfo(w http.ResponseWriter, r *http.Request) {
 	api.Respond(info, http.StatusOK, w)
 }
 
+// swagger:route GET /story/{storyId} Stories getStory
+//
+// Returns the specified Story
+//
+// responses:
+//  200: storyResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (s *Stories) GetStoryById(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
@@ -59,6 +75,15 @@ func (s *Stories) GetStoryById(w http.ResponseWriter, r *http.Request) {
 	api.Respond(story, http.StatusOK, w)
 }
 
+// swagger:route POST /story Stories createStory
+//
+// Creates a new Story
+//
+// responses:
+//  201: storyResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r.Context())
 
@@ -91,6 +116,15 @@ func (s *Stories) CreateStory(w http.ResponseWriter, r *http.Request) {
 	api.Respond(created, http.StatusCreated, w)
 }
 
+// swagger:route PUT /story/{storyId} Stories updateStory
+//
+// Updates the specified Story
+//
+// responses:
+//  200: storyResponse
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (s *Stories) UpdateStory(w http.ResponseWriter, r *http.Request) {
 	storyId, _ := getParamFomRequest(r, "id")
 
@@ -134,6 +168,15 @@ func (s *Stories) UpdateStory(w http.ResponseWriter, r *http.Request) {
 	api.Respond("", http.StatusNoContent, w)
 }
 
+// swagger:route DELETE /story/{storyId} Stories deleteStory
+//
+// Deletes the specified Story
+//
+// responses:
+//  204: noContent
+//  400: errorResponse
+//  404: errorResponse
+//  500: errorResponse
 func (s *Stories) DeleteStory(w http.ResponseWriter, r *http.Request) {
 	storyId, _ := getParamFomRequest(r, "id")
 
@@ -143,4 +186,30 @@ func (s *Stories) DeleteStory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.Respond("", http.StatusNoContent, w)
+}
+
+// swagger:parameters getStory updateStory deleteStory
+type StoryUUIDParameter struct {
+	// The ID of the specified Story
+	// in: path
+	// required: true
+	// pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+	// example: f9d633f8-c684-4dc3-b410-d36df912c4c1
+	ID string `json:"storyId"`
+}
+
+// swagger:parameters createStory
+type NewStoryParameter struct {
+	// The story to be created
+	// in: body
+	// required: true
+	Body dto.NewStoryDto
+}
+
+// swagger:parameters updateStory
+type UpdateStoryParameter struct {
+	// The story to be updated
+	// in: body
+	// required: true
+	Body dto.NewStoryDto
 }
